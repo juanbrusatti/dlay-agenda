@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import {
   desvincularBaileys,
   getBaileysSessionState,
+  probarBaileys,
   vincularBaileys,
   type BaileysSessionState,
 } from "@/lib/actions/baileys";
@@ -94,6 +96,7 @@ export function BaileysLink() {
 
   if (estado.status === "connected") {
     return (
+      <>
       <Card accent>
         <CardBody className="grid gap-3">
           <CardTitle>WhatsApp conectado con QR</CardTitle>
@@ -136,6 +139,8 @@ export function BaileysLink() {
           )}
         </CardBody>
       </Card>
+      <Prueba />
+      </>
     );
   }
 
@@ -196,6 +201,60 @@ export function BaileysLink() {
         <Button disabled={pendiente} onClick={vincular} className="mt-1">
           {pendiente ? "Pidiendo el código…" : "Mostrar el código QR"}
         </Button>
+      </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * Un mensaje a un número propio, para ver que la cadena entera anda antes de
+ * que le llegue algo a un cliente.
+ */
+function Prueba() {
+  const [telefono, setTelefono] = useState("");
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+  const [pendiente, startTransition] = useTransition();
+
+  function probar(e: React.FormEvent) {
+    e.preventDefault();
+    setResultado(null);
+    startTransition(async () => {
+      const r = await probarBaileys(telefono);
+      setResultado(
+        r.error
+          ? { ok: false, texto: r.error }
+          : { ok: true, texto: "Listo: fijate en ese teléfono, tendría que llegar en unos segundos." },
+      );
+    });
+  }
+
+  return (
+    <Card>
+      <CardBody>
+        <form onSubmit={probar} className="grid gap-3">
+          <CardTitle>Mandarme un mensaje de prueba</CardTitle>
+          <Field
+            label="A qué número"
+            type="tel"
+            inputMode="tel"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            placeholder="358 412 3456"
+            hint="Usá uno tuyo, distinto del que acabás de vincular: un número no se puede escribir a sí mismo."
+            required
+          />
+          {resultado && (
+            <p
+              role="status"
+              className={`text-[13px] ${resultado.ok ? "text-ink" : "text-danger"}`}
+            >
+              {resultado.texto}
+            </p>
+          )}
+          <Button type="submit" variant="outline" disabled={pendiente || !telefono.trim()}>
+            {pendiente ? "Mandando…" : "Mandar prueba"}
+          </Button>
+        </form>
       </CardBody>
     </Card>
   );

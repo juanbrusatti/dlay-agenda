@@ -1,120 +1,184 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { META_VISIBLE } from "@/lib/canal-whatsapp";
+import {
+  CUANDO,
+  DATOS,
+  PLANTILLA_DE_FABRICA,
+  vistaPrevia,
+  type AvisosDelServicio,
+  type Cuando,
+} from "@/lib/avisos";
 
 /**
- * El mensaje que este servicio le suma al recordatorio.
+ * El recordatorio de este servicio: cuándo sale y qué dice.
  *
- * Vive acá y no en Recordatorios a propósito: quien carga un servicio ya está
+ * Vive acá y no en Avisos a propósito: quien carga un servicio ya está
  * pensando en ese servicio —cuánto dura, cuánto sale, qué hay que saber antes
- * de venir—. Mandarla a otra pantalla a escribir la parte del mensaje rompe
- * ese hilo, y es la razón por la que el sistema anterior lo tenía junto.
+ * de venir—. Mandarla a otra pantalla a decidir cuándo avisar y qué decir
+ * rompe ese hilo.
  *
- * Lo que no puede vivir acá es el recordatorio entero: el saludo y la fecha
- * viajan en una plantilla aprobada por Meta, y esa aprobación es por trámite.
- * Por eso esta parte es libre e instantánea, y el marco se toca una vez.
+ * El saludo y el cierre son de la regla, iguales para todos los servicios, y
+ * se ven en gris en la vista previa. Lo que se escribe acá va en el medio.
  */
 
-/** Lo que el sistema reemplaza al enviar. */
-const VARIABLES = [
-  ["{{cliente}}", "el nombre del cliente"],
-  ["{{cuando}}", "la fecha y la hora del turno"],
-  ["{{servicio}}", "qué se le hace"],
-  ["{{estetica}}", "el nombre de tu negocio"],
-] as const;
-
-const EJEMPLO: Record<string, string> = {
-  "{{cliente}}": "Mirián",
-  "{{cuando}}": "lunes 14 de septiembre a las 09:00",
-  "{{servicio}}": "depilación definitiva",
-  "{{estetica}}": "Estética Asusalud",
-  "{{fecha}}": "lunes 14 de septiembre",
-  "{{hora}}": "09:00",
+const EJEMPLO_CUANDO: Record<Cuando, string> = {
+  dia: "jueves 23 de octubre a las 15:00",
+  semana: "jueves 30 de octubre a las 15:00",
 };
 
-export function MensajeDelServicio({ defaultValue }: { defaultValue: string }) {
+export function MensajeDelServicio({
+  defaultValue,
+  nombre,
+  avisos,
+}: {
+  defaultValue: string;
+  nombre: string;
+  avisos: AvisosDelServicio;
+}) {
   const [texto, setTexto] = useState(defaultValue);
+  const [marcados, setMarcados] = useState(avisos.marcados);
+  const area = useRef<HTMLTextAreaElement>(null);
 
-  const vistaPrevia = texto
-    .replace(/\{\{\s*(\w+)\s*\}\}/g, (hueco, key: string) =>
-      EJEMPLO[`{{${key}}}`] ?? EJEMPLO[hueco] ?? "",
-    )
-    .replace(/ {2,}/g, " ")
-    .trim();
+  // El dato va donde está el cursor, no al final: así se puede escribir
+  // «Hola [Nombre], te esperamos» sin tener que mover nada después.
+  function insertar(token: string) {
+    const el = area.current;
+    const desde = el?.selectionStart ?? texto.length;
+    const hasta = el?.selectionEnd ?? texto.length;
+    const antes = texto.slice(0, desde);
+    const pegado = antes && !/\s$/.test(antes) ? ` ${token}` : token;
+    setTexto(antes + pegado + texto.slice(hasta));
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = desde + pegado.length;
+      el?.setSelectionRange(pos, pos);
+    });
+  }
 
-  // Meta no acepta saltos de línea dentro de un parámetro. No los perdemos
-  // —se convierten en un espacio antes de salir—, pero quien escribió los
-  // renglones merece enterarse acá y no al ver el mensaje que llegó.
-  const tieneRenglones = /\n/.test(texto.trim());
+  const elegidos = (Object.keys(CUANDO) as Cuando[]).filter((c) => marcados[c]);
 
   return (
-    <div className="grid gap-3">
-      <Textarea
-        label="Mensaje de este servicio"
-        name="preparationNote"
-        maxLength={600}
-        rows={3}
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        placeholder="No te depiles con cera ni pinza 15 días antes, y vení sin cremas."
-        hint="Lo que este servicio le suma al recordatorio. Si lo dejás vacío, el recordatorio sale igual, sin esta parte."
-      />
+    <Card>
+      <CardBody className="grid gap-5">
+        <CardTitle>Recordatorio por WhatsApp</CardTitle>
 
-      <div className="grid gap-1.5">
-        <span className="text-[12.5px] font-medium text-muted">
-          Tocá para insertar:
-        </span>
-        <div className="flex flex-wrap gap-1.5">
-          {VARIABLES.map(([token, que]) => (
-            <button
-              key={token}
-              type="button"
-              title={que}
-              onClick={() => setTexto((t) => (t ? `${t} ${token}` : token))}
-              className="rounded-pill border-[1.5px] border-line bg-surface px-2.5 py-1 font-mono text-[11.5px] text-accent-text hover:border-accent"
-            >
-              {token}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {vistaPrevia && (
-        <div className="grid gap-1.5">
-          <span className="text-[12.5px] font-medium text-muted">
-            Así le va a llegar:
-          </span>
-          <div className="rounded-[14px] bg-surface-2 px-3.5 py-2.5">
-            <p className="text-[13.5px] leading-relaxed">
-              {/* El marco es el de la plantilla, que se edita en
-                  Recordatorios. Va apagado para que se lea qué parte está
-                  escribiendo acá y cuál viene de allá. */}
-              <span className="text-muted">
-                Hola Mirián! Te recordamos tu turno en Estética Asusalud mañana
-                lunes 14 de septiembre a las 09:00 para depilación definitiva.{" "}
-              </span>
-              <span className="text-ink">{vistaPrevia}</span>
+        {avisos.editable && (
+          <fieldset className="grid gap-2">
+            <legend className="mb-2 text-[13.5px] font-medium text-ink">
+              ¿Cuándo le avisamos?
+            </legend>
+            {/* La marca le dice a la acción que esta parte se mostró. */}
+            <input type="hidden" name="avisos" value="1" />
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(["semana", "dia"] as Cuando[]).map((c) => (
+                <label
+                  key={c}
+                  className={`flex cursor-pointer items-center gap-3 rounded-[16px] border-[1.5px] px-3.5 py-3 ${
+                    marcados[c] ? "border-accent bg-accent-wash" : "border-line bg-surface"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name={`aviso_${c}`}
+                    checked={marcados[c]}
+                    onChange={(e) => setMarcados((m) => ({ ...m, [c]: e.target.checked }))}
+                    className="h-5 w-5 accent-[var(--color-accent)]"
+                  />
+                  <span className="text-[14.5px] font-medium">{CUANDO[c].titulo}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-[12.5px] leading-snug text-muted">
+              {elegidos.length === 0
+                ? "Sin ninguno marcado, quien venga a este servicio no recibe recordatorio."
+                : elegidos.length === 2
+                  ? "Le llegan dos mensajes: uno a la semana y otro el día anterior."
+                  : "Le llega un solo mensaje."}
             </p>
-          </div>
-          <p className="text-[12.5px] leading-snug text-muted">
-            La parte gris es el recordatorio del día anterior y se cambia en
-            Recordatorios. La negra es la de este servicio.
-          </p>
-        </div>
-      )}
+          </fieldset>
+        )}
 
-      {META_VISIBLE && tieneRenglones && (
-        <p
-          role="status"
-          className="rounded-[14px] bg-warn-wash px-3.5 py-2.5 text-[13px] leading-snug text-ink"
-        >
-          En WhatsApp esto llega en un solo párrafo: Meta no admite renglones
-          sueltos dentro de esta parte del mensaje. Se entiende igual, pero no
-          va a verse separado como lo estás escribiendo.
+        <div className="grid gap-2">
+          <Textarea
+            ref={area}
+            label="Qué le querés decir"
+            name="preparationNote"
+            maxLength={600}
+            rows={4}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="No te depiles con cera ni pinza 15 días antes, y vení sin cremas."
+            hint="Indicaciones, qué traer, tu política de ausencias. Si lo dejás vacío, el recordatorio sale igual, sin esta parte."
+          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[12.5px] text-muted">Agregar:</span>
+            {DATOS.map((d) => (
+              <button
+                key={d.token}
+                type="button"
+                onClick={() => insertar(d.token)}
+                className="rounded-pill border-[1.5px] border-line bg-surface px-2.5 py-1 text-[12.5px] font-medium text-accent-text hover:border-accent"
+              >
+                + {d.etiqueta}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {(avisos.editable ? elegidos : (["dia"] as Cuando[])).map((c) => (
+          <div key={c} className="grid gap-1.5">
+            <span className="text-[12.5px] font-medium text-muted">
+              Así le llega {c === "dia" ? "el día anterior" : "una semana antes"}:
+            </span>
+            <Burbuja
+              {...(() => {
+                const plantilla = avisos.plantillas[c] ?? PLANTILLA_DE_FABRICA[c];
+                const datos = {
+                  negocio: avisos.negocio,
+                  servicio: nombre || "este servicio",
+                  cuando: EJEMPLO_CUANDO[c],
+                };
+                return {
+                  texto: vistaPrevia(plantilla, texto, datos),
+                  marco: vistaPrevia(plantilla, "", datos),
+                };
+              })()}
+            />
+          </div>
+        ))}
+
+        <p className="text-[12.5px] leading-snug text-muted">
+          El saludo y el cierre son iguales para todos los servicios. Se cambian
+          en Avisos → Opciones avanzadas.
         </p>
-      )}
+      </CardBody>
+    </Card>
+  );
+}
+
+/**
+ * El mensaje como se ve en WhatsApp. Lo que escribió la persona va en negro y
+ * el resto en gris, para que se vea qué parte es suya: son los párrafos que no
+ * están en el mismo mensaje armado sin su texto.
+ */
+function Burbuja({ texto, marco }: { texto: string; marco: string }) {
+  const delMarco = new Set(marco.split("\n\n"));
+
+  return (
+    <div className="rounded-[14px] rounded-tl-[4px] bg-surface-2 px-3.5 py-2.5">
+      {texto.split("\n\n").map((parrafo, i) => (
+        <p
+          key={i}
+          className={`whitespace-pre-line text-[13.5px] leading-relaxed ${
+            delMarco.has(parrafo) ? "text-muted" : "text-ink"
+          } ${i > 0 ? "mt-2" : ""}`}
+        >
+          {parrafo}
+        </p>
+      ))}
     </div>
   );
 }

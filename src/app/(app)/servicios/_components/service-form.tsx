@@ -13,6 +13,7 @@ import { centsToInput } from "@/lib/money";
 import type { FormState } from "@/lib/actions/services";
 import type { Service, ServiceCategory } from "@/lib/data/services";
 import { MensajeDelServicio } from "./mensaje-del-servicio";
+import type { AvisosDelServicio } from "@/lib/avisos";
 
 const INITIAL: FormState = { error: null };
 
@@ -33,8 +34,10 @@ export function ServiceForm({
   service,
   categories,
   submitLabel,
+  avisos,
 }: {
   action: (prev: FormState, data: FormData) => Promise<FormState>;
+  avisos: AvisosDelServicio;
   service?: Service;
   categories: ServiceCategory[];
   submitLabel: string;
@@ -50,6 +53,7 @@ export function ServiceForm({
   const checkbox = (key: string, fallback: boolean) =>
     sent ? sent[key] === "on" : fallback;
 
+  const [nombre, setNombre] = useState(text("name", service?.name ?? ""));
   const [duracion, setDuracion] = useState(
     Number(sent?.durationMinutes) || service?.duration_minutes || 30,
   );
@@ -66,7 +70,8 @@ export function ServiceForm({
             name="name"
             required
             minLength={2}
-            defaultValue={text("name", service?.name ?? "")}
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
             placeholder="Depilación definitiva"
             autoFocus={!service}
           />
@@ -93,15 +98,24 @@ export function ServiceForm({
             placeholder="Qué incluye y cuántas sesiones suele llevar."
             hint="Se muestra en la reserva online. Opcional."
           />
-
-          <MensajeDelServicio
-            defaultValue={text(
-              "preparationNote",
-              service?.preparation_note ?? "",
-            )}
-          />
         </CardBody>
       </Card>
+
+      <MensajeDelServicio
+        defaultValue={text("preparationNote", service?.preparation_note ?? "")}
+        nombre={nombre}
+        avisos={
+          sent && avisos.editable
+            ? {
+                ...avisos,
+                marcados: {
+                  semana: sent.aviso_semana === "on",
+                  dia: sent.aviso_dia === "on",
+                },
+              }
+            : avisos
+        }
+      />
 
       <Card>
         <CardBody className="grid gap-5">

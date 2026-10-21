@@ -263,3 +263,24 @@ describe("el recordatorio completo que sale a Meta", () => {
     }
   });
 });
+
+describe("párrafos", () => {
+  const PLANTILLA = "Hola {{cliente}}!\n\n{{mensaje}}\n\nConfirmá acá: {{link}}";
+
+  it("el mensaje del servicio va en su propio párrafo", () => {
+    expect(render(PLANTILLA, CTX)).toBe(
+      "Hola Mirián!\n\nNo te depiles con cera 15 días antes.\n\nConfirmá acá: https://dlay.app/t/abc123",
+    );
+  });
+
+  it("sin mensaje del servicio no queda un hueco de cuatro renglones", () => {
+    expect(render(PLANTILLA, { ...CTX, preparation: null })).toBe(
+      "Hola Mirián!\n\nConfirmá acá: https://dlay.app/t/abc123",
+    );
+  });
+
+  it("los renglones que escribió el negocio llegan tal cual", () => {
+    const texto = render(PLANTILLA, { ...CTX, preparation: "Traé toalla.\nVení sin cremas." });
+    expect(texto).toContain("Traé toalla.\nVení sin cremas.");
+  });
+});

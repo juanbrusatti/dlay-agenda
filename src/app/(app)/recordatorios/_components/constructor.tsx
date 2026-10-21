@@ -74,8 +74,9 @@ export function Constructor({
     rule?.trigger ?? "before_appointment",
   );
   const [offset, setOffset] = useState(Math.abs(rule?.offset_minutes ?? 1440));
+  // Los recordatorios salen sólo por WhatsApp: sin elegir canal ni orden.
   const [channels, setChannels] = useState<Channel[]>(
-    (rule?.channel_order as Channel[]) ?? ["whatsapp"],
+    META_VISIBLE ? ((rule?.channel_order as Channel[]) ?? ["whatsapp"]) : ["whatsapp"],
   );
   const [serviceIds, setServiceIds] = useState<string[]>(
     rule?.service_ids ?? [],
@@ -228,7 +229,8 @@ export function Constructor({
 
       <Card>
         <CardBody className="grid gap-5">
-          <CardTitle>Por dónde</CardTitle>
+          <CardTitle>{META_VISIBLE ? "Por dónde" : "Mensaje"}</CardTitle>
+          {META_VISIBLE && (<>
           <p className="-mt-3 text-[13.5px] leading-relaxed text-muted">
             Se intenta en este orden y se usa el primero que la persona tenga.
             {META_VISIBLE
@@ -301,6 +303,7 @@ export function Constructor({
               );
             })}
           </ul>
+          </>)}
 
           <div className="grid gap-4">
             {channels.map((ch) => {
@@ -314,7 +317,7 @@ export function Constructor({
               return (
                 <Select
                   key={ch}
-                  label={`Mensaje por ${CHANNEL_LABELS[ch].toLowerCase()}`}
+                  label={META_VISIBLE ? `Mensaje por ${CHANNEL_LABELS[ch].toLowerCase()}` : "Qué mensaje se manda"}
                   name={`template_${ch}`}
                   defaultValue={actual ?? ""}
                   hint={

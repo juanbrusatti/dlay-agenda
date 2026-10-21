@@ -10,6 +10,7 @@ import {
   type Channel,
   type RuleWithTemplates,
 } from "@/lib/recordatorios";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export function ListaReglas({ rules }: { rules: RuleWithTemplates[] }) {
   const [pending, startTransition] = useTransition();
@@ -33,15 +34,17 @@ export function ListaReglas({ rules }: { rules: RuleWithTemplates[] }) {
                 <p className="truncate text-[15px] font-semibold">{r.name}</p>
                 {r.only_if_missed && (
                   <span className="rounded-pill bg-surface-2 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-faint">
-                    Sólo faltadoras
+                    Sólo quien faltó
                   </span>
                 )}
               </div>
               <p className="mt-0.5 truncate text-[13px] text-muted">
                 {TRIGGER_LABELS[r.trigger]}
                 {r.trigger !== "birthday" &&
-                  ` · ${describeOffset(r.offset_minutes)}`}{" "}
-                · {canales}
+                  ` · ${describeOffset(r.offset_minutes)}`}
+                {META_VISIBLE && ` · ${canales}`}
+                {r.service_ids.length > 0 &&
+                  ` · ${r.service_ids.length} ${r.service_ids.length === 1 ? "servicio" : "servicios"}`}
               </p>
             </Link>
 

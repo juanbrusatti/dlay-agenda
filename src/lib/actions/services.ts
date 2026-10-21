@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { parsePriceToCents } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentTenant } from "@/lib/auth/tenant";
+import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
+import { aplicar } from "@/lib/avisos-guardar";
+import type { Cuando } from "@/lib/avisos";
 
 /**
  * React 19 resetea el formulario cuando la acción termina, así que un error de
@@ -107,6 +109,23 @@ function friendly(code: string | undefined, name: string): string {
   return "No se pudo guardar. Probá de nuevo en unos segundos.";
 }
 
+/**
+ * Los avisos que se marcaron en el formulario. Sólo vienen si la pantalla los
+ * mostró —a titular y administración—: sin la marca `avisos` no se toca nada,
+ * así guardar un servicio desde otro rol no le apaga los recordatorios.
+ */
+async function guardarAvisos(serviceId: string, formData: FormData): Promise<string | null> {
+  if (formData.get("avisos") !== "1") return null;
+  const membership = await getCurrentTenant();
+  if (!membership || !atLeast(membership.role, "admin")) return null;
+
+  for (const cuando of ["semana", "dia"] as Cuando[]) {
+    const error = await aplicar([serviceId], cuando, formData.get(`aviso_${cuando}`) === "on");
+    if (error) return error;
+  }
+  return null;
+}
+
 export async function createService(
   _prev: FormState,
   formData: FormData,
@@ -123,15 +142,21 @@ export async function createService(
   if (!membership) return { error: "No encontramos tu negocio." };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: creado, error } = await supabase
     .from("services")
-    .insert({ tenant_id: membership.tenantId, ...toRow(parsed.data) });
+    .insert({ tenant_id: membership.tenantId, ...toRow(parsed.data) })
+    .select("id")
+    .single();
 
   if (error) {
     return { error: friendly(error.code, parsed.data.name), values: echo(formData) };
   }
 
+  const errorAvisos = await guardarAvisos(creado.id, formData);
+  if (errorAvisos) return { error: errorAvisos, values: echo(formData) };
+
   revalidatePath("/servicios");
+  revalidatePath("/recordatorios");
   redirect("/servicios");
 }
 
@@ -158,7 +183,11 @@ export async function updateService(
     return { error: friendly(error.code, parsed.data.name), values: echo(formData) };
   }
 
+  const errorAvisos = await guardarAvisos(id, formData);
+  if (errorAvisos) return { error: errorAvisos, values: echo(formData) };
+
   revalidatePath("/servicios");
+  revalidatePath("/recordatorios");
   redirect("/servicios");
 }
 

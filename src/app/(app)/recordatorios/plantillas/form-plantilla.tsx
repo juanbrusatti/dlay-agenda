@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { saveTemplate, type FormState } from "@/lib/actions/recordatorios";
 import { CHANNEL_LABELS, type Channel, type Template } from "@/lib/recordatorios";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 const INITIAL: FormState = { error: null };
 
@@ -94,7 +95,15 @@ export function FormPlantilla({
               ))}
           </Select>
 
-          {channel === "whatsapp" ? (
+          {channel === "whatsapp" && !META_VISIBLE ? (
+            // Por QR sale el texto tal cual: no hay nombre ni idioma de Meta
+            // que cargar. Se conservan los que ya tuviera, por si se vuelve.
+            <>
+              <input type="hidden" name="providerName" value={sent?.providerName ?? template?.provider_name ?? ""} />
+              <input type="hidden" name="providerLanguage" value={sent?.providerLanguage ?? template?.provider_language ?? "es_AR"} />
+              <input type="hidden" name="category" value={sent?.category ?? template?.category ?? "utility"} />
+            </>
+          ) : channel === "whatsapp" ? (
             <>
               <Field
                 label="Nombre en Meta"
@@ -131,7 +140,14 @@ export function FormPlantilla({
             <input type="hidden" name="category" value="utility" />
           )}
 
-          {channel === "whatsapp" && (
+          {/* Por QR no hay botones: van sólo como dato guardado. */}
+          {channel === "whatsapp" &&
+            !META_VISIBLE &&
+            botones.map((b) => (
+              <input key={b} type="hidden" name="quickReplies" value={b} />
+            ))}
+
+          {channel === "whatsapp" && META_VISIBLE && (
             <div className="grid gap-2">
               {botones.map((b) => (
                 <input key={b} type="hidden" name="quickReplies" value={b} />

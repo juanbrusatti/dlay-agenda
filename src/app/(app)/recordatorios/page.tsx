@@ -19,18 +19,22 @@ import { Freno } from "./_components/freno";
 import { ModoPrueba } from "./_components/modo-prueba";
 import { ListaReglas } from "./_components/lista-reglas";
 
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
+import { getBaileysSessionState } from "@/lib/actions/baileys";
+
 export const metadata: Metadata = { title: "Recordatorios" };
 
 export default async function RecordatoriosPage() {
   const membership = await getCurrentTenant();
   if (!membership) return null;
 
-  const [rules, settings, cola, proximos, whatsapp] = await Promise.all([
+  const [rules, settings, cola, proximos, whatsapp, qr] = await Promise.all([
     listRules(),
     getSettings(),
     getQueueSummary(),
     listUpcoming(10),
-    getWhatsappStatus(),
+    META_VISIBLE ? getWhatsappStatus() : null,
+    getBaileysSessionState(),
   ]);
 
   const puedeEditar = atLeast(membership.role, "admin");
@@ -70,7 +74,7 @@ export default async function RecordatoriosPage() {
           )}
         </header>
 
-        <ReglasWhatsapp costo />
+        {META_VISIBLE && <ReglasWhatsapp costo />}
 
         {settings && !settings.sending_enabled && (
           <Freno enabled={false} reason={settings.paused_reason} />
@@ -83,20 +87,21 @@ export default async function RecordatoriosPage() {
 
         {/* Sin cuenta conectada, todo lo que caiga en WhatsApp va a fallar.
             Conviene decirlo antes y no en la bitácora de errores. */}
-        {!whatsapp?.has_token && (
+        {!whatsapp?.has_token && qr.status !== "connected" && (
           <div className="rounded-card border-[1.5px] border-line bg-surface px-4 py-3">
             <p className="text-[11.5px] font-semibold uppercase tracking-wider text-faint">
               WhatsApp sin conectar
             </p>
             <p className="mt-0.5 max-w-prose text-[13.5px] leading-relaxed text-muted">
-              Los recordatorios que caigan en WhatsApp no van a poder salir
-              hasta que conectes la cuenta de Meta. Los que van por correo sí
-              funcionan.
+              {META_VISIBLE
+                ? "Los recordatorios que caigan en WhatsApp no van a poder salir hasta que conectes la cuenta de Meta. Los que van por correo sí funcionan."
+                : "Los recordatorios que caigan en WhatsApp no van a poder salir hasta que conectes el número en Ajustes → WhatsApp. Los que van por correo sí funcionan."}
             </p>
           </div>
         )}
 
-        {cola.readRate !== null && cola.readRate < 0.5 && (
+        {/* La tasa de lectura y la calidad las informa el webhook de Meta. */}
+        {META_VISIBLE && cola.readRate !== null && cola.readRate < 0.5 && (
           <div className="rounded-card border-[1.5px] border-warn bg-warn-wash px-4 py-3">
             <p className="text-[11.5px] font-semibold uppercase tracking-wider text-warn">
               Poca gente los está leyendo
@@ -109,7 +114,7 @@ export default async function RecordatoriosPage() {
           </div>
         )}
 
-        {whatsapp?.has_token && whatsapp.quality_rating === "RED" && (
+        {META_VISIBLE && whatsapp?.has_token && whatsapp.quality_rating === "RED" && (
           <div className="rounded-card border-[1.5px] border-danger bg-danger-wash px-4 py-3">
             <p className="text-[11.5px] font-semibold uppercase tracking-wider text-danger">
               Calidad en rojo

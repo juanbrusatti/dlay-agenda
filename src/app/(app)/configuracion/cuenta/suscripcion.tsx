@@ -3,6 +3,7 @@ import { formatPrice, formatPriceExacto } from "@/lib/money";
 import { COSTO_MENSAJE_META_CENTS, DIAS_PARA_PAGAR } from "@/lib/precio";
 import { diasHasta, formatFecha, type Suscripcion } from "@/lib/suscripcion";
 import { Pagar } from "./pagar";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 /**
  * Tu cuenta, para quien está en el abono mensual.
@@ -85,11 +86,13 @@ export function CuentaSuscripcion({ s }: { s: Suscripcion }) {
               suspende: se frenan los recordatorios y la reserva online, pero no
               se borra nada. Al pagar, vuelve tal como estaba.
             </li>
-            <li>
-              Los mensajes de WhatsApp van aparte, también durante la prueba: los
-              cobra Meta contra tu tarjeta, hoy{" "}
-              {formatPriceExacto(COSTO_MENSAJE_META_CENTS)} cada uno.
-            </li>
+            {META_VISIBLE && (
+              <li>
+                Los mensajes de WhatsApp van aparte, también durante la prueba: los
+                cobra Meta contra tu tarjeta, hoy{" "}
+                {formatPriceExacto(COSTO_MENSAJE_META_CENTS)} cada uno.
+              </li>
+            )}
           </ul>
         </CardBody>
       </Card>

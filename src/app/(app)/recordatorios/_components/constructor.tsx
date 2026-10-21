@@ -22,6 +22,7 @@ import {
 } from "@/lib/recordatorios";
 import { saveRule, simulateRule, type FormState } from "@/lib/actions/recordatorios";
 import type { ServiceWithCategory } from "@/lib/data/services";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 const INITIAL: FormState = { error: null };
 const CHANNELS: Channel[] = ["push", "email", "whatsapp"];
@@ -113,7 +114,9 @@ export function Constructor({
     .filter((s) => s.channel !== null)
     .reduce((n, s) => n + s.recipients, 0);
   const sinCanal = visible.find((s) => s.channel === null)?.recipients ?? 0;
-  const costo = visible.reduce((n, s) => n + s.cost_cents, 0);
+  // Por QR, WhatsApp tampoco cuesta: el simulador sigue usando el precio
+  // de Meta, así que mientras esté escondido el costo se muestra en cero.
+  const costo = META_VISIBLE ? visible.reduce((n, s) => n + s.cost_cents, 0) : 0;
 
   const presets = OFFSET_PRESETS.filter((p) =>
     trigger === "before_appointment" ? p.minutes < 0 : p.minutes > 0,
@@ -228,7 +231,9 @@ export function Constructor({
           <CardTitle>Por dónde</CardTitle>
           <p className="-mt-3 text-[13.5px] leading-relaxed text-muted">
             Se intenta en este orden y se usa el primero que la persona tenga.
-            Las notificaciones y el correo no cuestan nada; cada WhatsApp sí.
+            {META_VISIBLE
+              ? "Las notificaciones y el correo no cuestan nada; cada WhatsApp sí."
+              : "Ninguno cuesta nada."}
           </p>
 
           <ul className="grid gap-1.5">
@@ -268,7 +273,7 @@ export function Constructor({
                       {CHANNEL_LABELS[ch]}
                     </span>
                     <span className="text-[12.5px] text-muted">
-                      {ch === "whatsapp" ? "con costo" : "gratis"}
+                      {META_VISIBLE && ch === "whatsapp" ? "con costo" : "gratis"}
                     </span>
                   </button>
 
@@ -415,7 +420,7 @@ export function Constructor({
                         {s.recipients} por {CHANNEL_LABELS[s.channel as Channel]}
                       </span>
                       <span className="tabular-nums opacity-85">
-                        {s.cost_cents === 0 ? "gratis" : formatPrice(s.cost_cents)}
+                        {!META_VISIBLE || s.cost_cents === 0 ? "gratis" : formatPrice(s.cost_cents)}
                       </span>
                     </li>
                   ))}

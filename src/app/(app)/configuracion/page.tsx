@@ -5,6 +5,8 @@ import { Card, CardBody } from "@/components/ui/card";
 import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { getBookingSettings, getBusinessHours } from "@/lib/data/configuracion";
 import { getWhatsappStatus } from "@/lib/data/whatsapp";
+import { getBaileysSessionState } from "@/lib/actions/baileys";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export const metadata: Metadata = { title: "Configuración" };
 
@@ -30,7 +32,7 @@ const SECCIONES = [
     href: "/configuracion/whatsapp",
     titulo: "WhatsApp",
     detalle:
-      "Conectá tu número para que los recordatorios puedan salir también por WhatsApp.",
+      "Conectá tu número escaneando un código, como WhatsApp Web, para que los recordatorios salgan también por WhatsApp.",
   },
   {
     href: "/configuracion/mensajeria",
@@ -63,10 +65,11 @@ export default async function ConfiguracionPage() {
   if (!membership) return null;
   if (!atLeast(membership.role, "admin")) notFound();
 
-  const [horarios, reservas, whatsapp] = await Promise.all([
+  const [horarios, reservas, whatsapp, qr] = await Promise.all([
     getBusinessHours(),
     getBookingSettings(),
-    getWhatsappStatus(),
+    META_VISIBLE ? getWhatsappStatus() : null,
+    getBaileysSessionState(),
   ]);
 
   // Lo que está sin resolver se marca acá, así nadie tiene que entrar sección
@@ -78,7 +81,7 @@ export default async function ConfiguracionPage() {
   if (!reservas?.enabled) {
     pendientes["/configuracion/reservas"] = "Agenda cerrada al público";
   }
-  if (!whatsapp) {
+  if (META_VISIBLE ? !whatsapp && qr.status !== "connected" : qr.status !== "connected") {
     pendientes["/configuracion/whatsapp"] = "Sin conectar";
   }
 
@@ -122,6 +125,7 @@ export default async function ConfiguracionPage() {
           ))}
         </ul>
 
+        {META_VISIBLE && (
         <Card>
           <CardBody className="grid gap-1.5">
             <p className="text-[11.5px] font-semibold uppercase tracking-wider text-faint">
@@ -134,6 +138,7 @@ export default async function ConfiguracionPage() {
             </p>
           </CardBody>
         </Card>
+        )}
       </main>
     </>
   );

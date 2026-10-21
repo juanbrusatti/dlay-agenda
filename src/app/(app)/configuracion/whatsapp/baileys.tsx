@@ -1,203 +1,117 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import {
-  vincularBaileys,
   desvincularBaileys,
   getBaileysSessionState,
+  vincularBaileys,
   type BaileysSessionState,
 } from "@/lib/actions/baileys";
 
-const POLL_INTERVAL = 3000; // Consultar cada 3 segundos
+/** Lo bastante seguido para que el QR nuevo aparezca antes de que venza. */
+const CADA_MS = 3000;
 
 /**
- * Componente para vincular WhatsApp con Baileys (modo dispositivo vinculado).
+ * Conectar WhatsApp escaneando un QR, como WhatsApp Web.
  *
- * Muestra un QR code que el usuario escanea con WhatsApp, como en WhatsApp Web.
- * Una vez conectado, el número funciona como dispositivo vinculado sin la
- * ventana de 24 horas de la API oficial.
+ * Es la alternativa gratis a la Cloud API: sin plantillas que aprobar y sin
+ * costo por mensaje. El servidor de WhatsApp escribe el QR en la base y lo
+ * renueva solo; esta tarjeta lo dibuja y mira hasta que la conexión abre.
  */
 export function BaileysLink() {
-  const [sessionState, setSessionState] = useState<BaileysSessionState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [linking, startLinking] = useTransition();
-  const [unlinking, startUnlinking] = useTransition();
+  const [estado, setEstado] = useState<BaileysSessionState | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [qrImagen, setQrImagen] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState(false);
+  const [pendiente, startTransition] = useTransition();
 
-  // Cargar estado inicial
-  useEffect(() => {
-    loadState();
+  const cargar = useCallback(async () => {
+    setEstado(await getBaileysSessionState());
   }, []);
 
-  // Polling para verificar si el QR fue escaneado
   useEffect(() => {
-    if (!sessionState?.hasSession || sessionState.status === "connected") {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void cargar();
+  }, [cargar]);
+
+  // Mientras se espera el escaneo, se pregunta seguido. Conectado o sin
+  // sesión, no hay nada que esperar.
+  useEffect(() => {
+    if (estado?.status !== "connecting") return;
+    const id = setInterval(cargar, CADA_MS);
+    return () => clearInterval(id);
+  }, [estado?.status, cargar]);
+
+  useEffect(() => {
+    const qr = estado?.status === "connecting" ? estado.qrCode : null;
+    if (!qr) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQrImagen(null);
       return;
     }
+    let vigente = true;
+    QRCode.toDataURL(qr, { margin: 1, width: 512 }).then((url) => {
+      if (vigente) setQrImagen(url);
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [estado?.status, estado?.qrCode]);
 
-    const interval = setInterval(() => {
-      loadState();
-    }, POLL_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [sessionState?.hasSession, sessionState?.status]);
-
-  async function loadState() {
-    const state = await getBaileysSessionState();
-    setSessionState(state);
-    setLoading(false);
-  }
-
-  function handleVincular() {
-    startLinking(async () => {
-      const result = await vincularBaileys();
-      if (result.error) {
-        setSessionState({
-          error: result.error,
-          hasSession: false,
-          status: null,
-          phoneNumber: null,
-          qrCode: null,
-          lastConnectedAt: null,
-          errorMessage: null,
-        });
-      } else {
-        await loadState();
-      }
+  function vincular() {
+    setAviso(null);
+    startTransition(async () => {
+      const r = await vincularBaileys();
+      if (r.error) setAviso(r.error);
+      await cargar();
     });
   }
 
-  function handleDesvincular() {
-    startUnlinking(async () => {
-      const result = await desvincularBaileys();
-      if (result.error) {
-        setSessionState({
-          error: result.error,
-          hasSession: sessionState?.hasSession ?? false,
-          status: sessionState?.status ?? null,
-          phoneNumber: sessionState?.phoneNumber ?? null,
-          qrCode: sessionState?.qrCode ?? null,
-          lastConnectedAt: sessionState?.lastConnectedAt ?? null,
-          errorMessage: null,
-        });
-      } else {
-        await loadState();
-        setConfirmar(false);
-      }
+  function desvincular() {
+    setAviso(null);
+    startTransition(async () => {
+      const r = await desvincularBaileys();
+      if (r.error) setAviso(r.error);
+      setConfirmar(false);
+      await cargar();
     });
   }
 
-  if (loading) {
+  if (!estado) {
     return (
       <Card>
         <CardBody>
-          <p className="text-[13.5px] text-muted">Cargando estado de WhatsApp...</p>
+          <p className="text-[13.5px] text-muted">Mirando el estado de WhatsApp…</p>
         </CardBody>
       </Card>
     );
   }
 
-  if (sessionState?.error) {
+  const error = aviso ?? estado.error;
+
+  if (estado.status === "connected") {
     return (
-      <Card accent={false}>
+      <Card accent>
         <CardBody className="grid gap-3">
-          <CardTitle>Error</CardTitle>
-          <p className="text-[13.5px] text-muted">{sessionState.error}</p>
-          <Button variant="outline" size="sm" onClick={() => loadState()}>
-            Reintentar
-          </Button>
-        </CardBody>
-      </Card>
-    );
-  }
-
-  // No hay sesión activa
-  if (!sessionState?.hasSession) {
-    return (
-      <Card>
-        <CardBody className="grid gap-4">
-          <CardTitle>Vincular WhatsApp (modo dispositivo vinculado)</CardTitle>
-          <p className="text-[13.5px] leading-relaxed text-muted">
-            Conectá tu número como si fuera WhatsApp Web. Este modo no tiene la
-            ventana de 24 horas y el número sigue funcionando normal en tu celular.
-          </p>
-          <div className="grid gap-2">
-            <p className="text-[13px] font-medium">Ventajas:</p>
-            <ul className="ml-4 list-disc text-[13px] leading-relaxed text-muted">
-              <li>Sin ventana de 24 horas</li>
-              <li>El número sigue funcionando en el celular</li>
-              <li>Funciona como WhatsApp Web</li>
-            </ul>
-          </div>
-          <Button
-            variant="default"
-            disabled={linking}
-            onClick={handleVincular}
-            className="mt-2"
-          >
-            {linking ? "Generando QR..." : "Vincular WhatsApp"}
-          </Button>
-        </CardBody>
-      </Card>
-    );
-  }
-
-  // Hay sesión en proceso de conexión (mostrar QR)
-  if (sessionState.status === "connecting" && sessionState.qrCode) {
-    return (
-      <Card accent={false}>
-        <CardBody className="grid gap-4">
-          <CardTitle>Vincular WhatsApp</CardTitle>
-          <p className="text-[13.5px] leading-relaxed text-muted">
-            Escaneá el código QR con WhatsApp. Se debe escanear directamente desde
-            la app de WhatsApp (no desde WhatsApp Web).
-          </p>
-          <div className="flex justify-center">
-            <img
-              src={`data:image/png;base64,${sessionState.qrCode}`}
-              alt="QR Code para vincular WhatsApp"
-              className="h-64 w-64 rounded-lg border"
-            />
-          </div>
-          <p className="text-center text-[12.5px] text-muted">
-            Abre WhatsApp → Ajustes → Dispositivos vinculados → Vincular un
-            dispositivo
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => startUnlinking(() => desvincularBaileys())}
-            disabled={unlinking}
-          >
-            {unlinking ? "Cancelando..." : "Cancelar"}
-          </Button>
-        </CardBody>
-      </Card>
-    );
-  }
-
-  // Sesión conectada
-  if (sessionState.status === "connected") {
-    return (
-      <Card accent={true}>
-        <CardBody className="grid gap-3">
-          <CardTitle>WhatsApp conectado</CardTitle>
-          <p className="text-[13.5px] leading-relaxed text-muted">
-            Tu número de WhatsApp está conectado como dispositivo vinculado.
-            Los recordatorios se envían automáticamente desde acá.
+          <CardTitle>WhatsApp conectado con QR</CardTitle>
+          <p className="text-[13.5px] leading-relaxed opacity-90">
+            Los recordatorios salen desde tu número, sin costo por mensaje. El
+            teléfono tiene que conectarse a internet al menos una vez cada dos
+            semanas, o WhatsApp desvincula el dispositivo.
           </p>
           <dl className="grid gap-1.5 border-t-[1.5px] border-white/25 pt-3 text-[14px]">
             <div className="flex justify-between gap-3">
               <dt className="opacity-75">Número</dt>
-              <dd>{sessionState.phoneNumber || "Conectado"}</dd>
+              <dd>{estado.phoneNumber ?? "Conectado"}</dd>
             </div>
-            {sessionState.lastConnectedAt && (
+            {estado.lastConnectedAt && (
               <div className="flex justify-between gap-3">
-                <dt className="opacity-75">Última conexión</dt>
+                <dt className="opacity-75">Conectado desde</dt>
                 <dd>
-                  {new Date(sessionState.lastConnectedAt).toLocaleString("es-AR", {
+                  {new Date(estado.lastConnectedAt).toLocaleString("es-AR", {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}
@@ -205,25 +119,18 @@ export function BaileysLink() {
               </div>
             )}
           </dl>
+          {error && <p className="text-[13px]">{error}</p>}
           {confirmar ? (
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button
-                variant="danger"
-                disabled={unlinking}
-                onClick={handleDesvincular}
-              >
-                {unlinking ? "Desconectando..." : "Sí, desconectar"}
+            <div className="mt-1 flex flex-wrap gap-2">
+              <Button variant="danger" disabled={pendiente} onClick={desvincular}>
+                {pendiente ? "Desconectando…" : "Sí, desconectar"}
               </Button>
               <Button variant="ghost" onClick={() => setConfirmar(false)}>
                 Mejor no
               </Button>
             </div>
           ) : (
-            <Button
-              variant="outline"
-              className="mt-2"
-              onClick={() => setConfirmar(true)}
-            >
+            <Button variant="outline" className="mt-1" onClick={() => setConfirmar(true)}>
               Desconectar
             </Button>
           )}
@@ -232,44 +139,62 @@ export function BaileysLink() {
     );
   }
 
-  // Estado de error
-  if (sessionState.status === "error") {
+  if (estado.status === "connecting") {
     return (
-      <Card accent={false}>
-        <CardBody className="grid gap-3">
-          <CardTitle>Error de conexión</CardTitle>
-          <p className="text-[13.5px] leading-relaxed text-muted">
-            Hubo un error con la sesión de WhatsApp.
-            {sessionState.errorMessage && `: ${sessionState.errorMessage}`}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => startUnlinking(() => desvincularBaileys())}
-              disabled={unlinking}
-            >
-              {unlinking ? "Limpiando..." : "Limpiar sesión"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleVincular}>
-              Reintentar
-            </Button>
+      <Card>
+        <CardBody className="grid gap-4">
+          <CardTitle>Escaneá el código</CardTitle>
+          <ol className="ml-4 list-decimal text-[13.5px] leading-relaxed text-muted">
+            <li>Abrí WhatsApp en el teléfono del negocio.</li>
+            <li>Andá a Ajustes → Dispositivos vinculados → Vincular un dispositivo.</li>
+            <li>Apuntá la cámara a este código.</li>
+          </ol>
+          <div className="flex justify-center">
+            {qrImagen ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrImagen}
+                alt="Código QR para vincular WhatsApp"
+                className="h-64 w-64 rounded-lg border-[1.5px] border-line bg-white p-2"
+              />
+            ) : (
+              <p className="py-24 text-[13.5px] text-muted">Generando el código…</p>
+            )}
           </div>
+          <p className="text-center text-[12.5px] text-faint">
+            El código se renueva solo cada unos segundos.
+          </p>
+          {error && <p className="text-[13px] text-danger">{error}</p>}
+          <Button variant="ghost" size="sm" disabled={pendiente} onClick={desvincular}>
+            Cancelar
+          </Button>
         </CardBody>
       </Card>
     );
   }
 
-  // Otros estados (disconnected, pending)
+  // Sin conexión: nunca se vinculó, se desvinculó o falló.
   return (
     <Card>
       <CardBody className="grid gap-3">
-        <CardTitle>Estado: {sessionState.status}</CardTitle>
+        <CardTitle>Conectar con QR, sin costo por mensaje</CardTitle>
         <p className="text-[13.5px] leading-relaxed text-muted">
-          La sesión está en estado "{sessionState.status}".
+          Vinculá el número del negocio como si fuera WhatsApp Web. Los
+          recordatorios salen como texto común, con el enlace para confirmar o
+          cambiar el turno. No hace falta aprobar plantillas y el número sigue
+          funcionando normal en el teléfono.
         </p>
-        <Button variant="outline" size="sm" onClick={handleVincular}>
-          Vincular de nuevo
+        <p className="text-[13px] leading-relaxed text-muted">
+          WhatsApp no permite oficialmente esta forma de conexión: si detecta
+          algo raro puede bloquear el número. Por eso los mensajes salen de a
+          uno y despacio.
+        </p>
+        {estado.errorMessage && (
+          <p className="text-[13px] text-danger">{estado.errorMessage}</p>
+        )}
+        {error && <p className="text-[13px] text-danger">{error}</p>}
+        <Button disabled={pendiente} onClick={vincular} className="mt-1">
+          {pendiente ? "Pidiendo el código…" : "Mostrar el código QR"}
         </Button>
       </CardBody>
     </Card>

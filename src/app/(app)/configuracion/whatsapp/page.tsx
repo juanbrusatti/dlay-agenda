@@ -13,6 +13,7 @@ import { FormWhatsapp } from "./form";
 import { Webhook } from "./webhook";
 import { RevisionWhatsapp } from "./revision";
 import { BaileysLink } from "./baileys";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export const metadata: Metadata = { title: "WhatsApp" };
 
@@ -54,6 +55,26 @@ export default async function WhatsappPage() {
   if (!membership) return null;
   if (!atLeast(membership.role, "admin")) notFound();
 
+  // Por ahora WhatsApp sale sólo por QR: lo de Meta queda escondido.
+  if (!META_VISIBLE) {
+    return (
+      <main className="mx-auto grid max-w-2xl gap-5 px-4 py-8">
+        <div>
+          <Volver />
+          <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em]">
+            WhatsApp
+          </h1>
+          <p className="mt-1 max-w-prose text-[14.5px] text-muted">
+            Conectá el número del negocio para que los recordatorios salgan
+            solos por WhatsApp, con el enlace para que tus clientes confirmen,
+            cancelen o cambien el turno.
+          </p>
+        </div>
+        <BaileysLink />
+      </main>
+    );
+  }
+
   const cuenta = await getWhatsappStatus();
   const estado = cuenta ? ESTADOS[cuenta.status] : null;
 
@@ -78,6 +99,9 @@ export default async function WhatsappPage() {
           botón.
         </p>
       </div>
+
+      {/* La opción gratis va primero y no depende de tener cuenta en Meta. */}
+      <BaileysLink />
 
       {cuenta && estado && (
         <Card accent={cuenta.status === "connected"}>
@@ -156,8 +180,6 @@ export default async function WhatsappPage() {
           <RevisionWhatsapp />
 
           <FormWhatsapp conectada verifyToken={verifyToken} />
-
-          <BaileysLink />
 
           <p className="px-1 text-[12.5px] leading-relaxed text-faint">
             El token se guarda del lado del servidor, en una tabla que el panel

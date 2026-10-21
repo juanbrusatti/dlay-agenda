@@ -9,6 +9,7 @@ import { saveMensajeria, type FormState } from "@/lib/actions/configuracion";
 import type { MessagingSettings } from "@/lib/configuracion";
 import { Guardar, Resultado } from "../_components/guardar";
 import { useRefrescarAlGuardar } from "../_components/refrescar";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 const INITIAL: FormState = { error: null };
 
@@ -88,6 +89,21 @@ export function FormMensajeria({
         </CardBody>
       </Card>
 
+      {/* Por QR los mensajes no cuestan: no hay gasto que topear. El valor
+          viaja igual para que guardar esta pantalla no lo borre. */}
+      {!META_VISIBLE && (
+        <input
+          type="hidden"
+          name="budgetPesos"
+          value={
+            settings.monthly_budget_cents === null
+              ? ""
+              : Math.round(Number(settings.monthly_budget_cents) / 100)
+          }
+        />
+      )}
+
+      {META_VISIBLE && (
       <Card>
         <CardBody className="grid gap-4">
           <CardTitle>Tope de gasto</CardTitle>
@@ -125,6 +141,7 @@ export function FormMensajeria({
           </p>
         </CardBody>
       </Card>
+      )}
 
       <Card>
         <CardBody className="grid gap-3">
@@ -135,13 +152,15 @@ export function FormMensajeria({
             </span>
           </div>
 
-          <p className="max-w-prose text-[13.5px] leading-relaxed text-muted">
-            El correo es el canal gratis para quien no tiene la aplicación
-            instalada: cada recordatorio que sale por ahí en lugar de WhatsApp
-            son{" "}
-            <strong className="font-medium text-ink">$ 37,68</strong> que no se
-            gastan.
-          </p>
+          {META_VISIBLE && (
+            <p className="max-w-prose text-[13.5px] leading-relaxed text-muted">
+              El correo es el canal gratis para quien no tiene la aplicación
+              instalada: cada recordatorio que sale por ahí en lugar de WhatsApp
+              son{" "}
+              <strong className="font-medium text-ink">$ 37,68</strong> que no se
+              gastan.
+            </p>
+          )}
 
           <p className="max-w-prose text-[13.5px] leading-relaxed text-muted">
             Está construido y probado, pero todavía no hay proveedor de correo

@@ -1,171 +1,124 @@
 -- ============================================================================
--- Dlay Agenda · Sesiones de WhatsApp con Baileys
+-- Dlay Agenda · WhatsApp como dispositivo vinculado (Baileys)
 --
--- Baileys es una librería que imita a WhatsApp Web, permitiendo conectar un
--- número como "dispositivo vinculado" sin la ventana de 24 horas. Esta tabla
--- guarda las sesiones activas de Baileys para cada negocio.
+-- La otra forma de conectar WhatsApp: en vez de la Cloud API de Meta, el
+-- número del negocio se vincula escaneando un QR, como WhatsApp Web. No hay
+-- plantillas que aprobar, no hay ventana de 24 horas y no cuesta nada por
+-- mensaje. El riesgo de bloqueo es del negocio y está asumido.
 --
--- Las sesiones se guardan en Supabase para que el servidor Baileys sea
--- descartable y pueda migrarse entre hosting (Northflank, Fly.io, etc).
+-- Quien mantiene la conexión abierta es un servidor aparte
+-- (`whatsapp-server/`), que entra con `service_role`. El panel nunca escribe
+-- en estas tablas: pide «vinculá» o «desvinculá» al servidor y después mira.
+--
+-- Una sola sesión por negocio. Volver a vincular pisa la anterior.
 -- ============================================================================
 
--- Tabla para guardar las sesiones de Baileys
-create table if not exists public.baileys_sessions (
-  id uuid primary key default gen_random_uuid(),
-  tenant_id uuid not null references public.tenants(id) on delete cascade,
-  session_id text not null unique, -- ID único de la sesión de Baileys
-  phone_number text, -- Número de teléfono conectado
-  status text not null default 'pending' check (status in ('pending', 'connecting', 'connected', 'disconnected', 'error')),
-  session_data jsonb, -- Datos de la sesión de Baileys (credenciales, tokens, etc)
-  qr_code text, -- QR code para vincular (solo mientras está pendiente)
-  last_connected_at timestamptz,
+create table public.baileys_sessions (
+  tenant_id            uuid primary key references public.tenants(id) on delete cascade,
+  status               text not null default 'disconnected'
+                         check (status in ('connecting', 'connected', 'disconnected', 'error')),
+  phone_number         text,
+  qr_code              text,
+  last_connected_at    timestamptz,
   last_message_sent_at timestamptz,
-  error_message text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  error_message        text,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
 );
 
--- Índices para búsquedas rápidas
-create index idx_baileys_sessions_tenant on public.baileys_sessions(tenant_id);
-create index idx_baileys_sessions_status on public.baileys_sessions(status);
-create index idx_baileys_sessions_session_id on public.baileys_sessions(session_id);
-
--- Comentarios
 comment on table public.baileys_sessions is
-  'Sesiones de WhatsApp conectadas con Baileys (modo dispositivo vinculado). '
-  'Permite enviar mensajes sin la ventana de 24 horas.';
-
-comment on column public.baileys_sessions.session_id is
-  'ID único de la sesión de Baileys, generado por el servidor externo.';
-
-comment on column public.baileys_sessions.session_data is
-  'Datos de la sesión de Baileys (auth state, keys, etc) necesarios para reconectar. '
-  'Esta información es sensible y no debe exponerse al navegador.';
+  'Estado de la conexión de WhatsApp por QR de cada negocio. La escribe sólo '
+  'el servidor de WhatsApp; el panel la lee por baileys_sessions_view.';
 
 comment on column public.baileys_sessions.qr_code is
-  'QR code en formato base64 para vincular el dispositivo. Se limpia después de conectar.';
+  'El texto del QR que hay que escanear, mientras está en «connecting». '
+  'WhatsApp lo cambia cada unos veinte segundos y el servidor lo va pisando.';
 
--- Políticas de seguridad (RLS)
+-- ---------------------------------------------------------------------------
+-- Las llaves del dispositivo
+-- ---------------------------------------------------------------------------
+-- Con esto cualquiera puede mandar mensajes en nombre del negocio. Va en una
+-- tabla aparte, sin vista y sin ningún permiso más que el de service_role.
+create table public.baileys_auth (
+  tenant_id uuid not null references public.tenants(id) on delete cascade,
+  key       text not null,
+  value     jsonb not null,
+  primary key (tenant_id, key)
+);
+
+comment on table public.baileys_auth is
+  'Credenciales y llaves de cifrado de WhatsApp de cada negocio. Equivalen a '
+  'la sesión abierta del teléfono: nadie más que el servidor las lee.';
+
 alter table public.baileys_sessions enable row level security;
+alter table public.baileys_sessions force row level security;
+alter table public.baileys_auth enable row level security;
+alter table public.baileys_auth force row level security;
 
--- Sólo el dueño/admin del negocio puede ver y editar sus sesiones
-create policy "Los titulares y admins pueden ver sus sesiones"
-  on public.baileys_sessions for select
-  using (
-    exists (
-      select 1 from public.memberships m
-      where m.tenant_id = baileys_sessions.tenant_id
-        and m.user_id = auth.uid()
-        and m.status = 'active'
-        and m.role in ('owner', 'admin')
-    )
-  );
+-- Sin políticas y sin permisos: igual que whatsapp_accounts.
+revoke all on public.baileys_sessions from anon, authenticated;
+revoke all on public.baileys_auth from anon, authenticated;
+grant all on public.baileys_sessions to service_role;
+grant all on public.baileys_auth to service_role;
 
-create policy "Los titulares y admins pueden insertar sesiones"
-  on public.baileys_sessions for insert
-  with check (
-    exists (
-      select 1 from public.memberships m
-      where m.tenant_id = baileys_sessions.tenant_id
-        and m.user_id = auth.uid()
-        and m.status = 'active'
-        and m.role in ('owner', 'admin')
-    )
-  );
-
-create policy "Los titulares y admins pueden actualizar sus sesiones"
-  on public.baileys_sessions for update
-  using (
-    exists (
-      select 1 from public.memberships m
-      where m.tenant_id = baileys_sessions.tenant_id
-        and m.user_id = auth.uid()
-        and m.status = 'active'
-        and m.role in ('owner', 'admin')
-    )
-  );
-
-create policy "Los titulares y admins pueden borrar sus sesiones"
-  on public.baileys_sessions for delete
-  using (
-    exists (
-      select 1 from public.memberships m
-      where m.tenant_id = baileys_sessions.tenant_id
-        and m.user_id = auth.uid()
-        and m.status = 'active'
-        and m.role in ('owner', 'admin')
-    )
-  );
-
--- Vista para el panel (sin datos sensibles)
-create or replace view public.baileys_sessions_view
+-- ---------------------------------------------------------------------------
+-- Lo que ve el panel
+-- ---------------------------------------------------------------------------
+-- `security_invoker = false` para poder leer la tabla sin darle permisos, y
+-- el filtro por rol porque el QR vincula el número: lo ve quien puede
+-- vincular, que es la titular y administración.
+create view public.baileys_sessions_view
 with (security_invoker = false)
 as
   select
-    id,
     tenant_id,
-    session_id,
-    phone_number,
     status,
+    phone_number,
     qr_code,
     last_connected_at,
     last_message_sent_at,
     error_message,
-    created_at,
     updated_at
   from public.baileys_sessions
-  where (select app.has_tenant(tenant_id));
-
-comment on view public.baileys_sessions_view is
-  'Vista de sesiones de Baileys sin datos sensibles (session_data). '
-  'Usada por el panel para mostrar el estado de conexión.';
+  where (select app.has_role(tenant_id, 'owner', 'admin'));
 
 revoke all on public.baileys_sessions_view from anon, authenticated;
 grant select on public.baileys_sessions_view to authenticated;
 
--- Función para obtener la sesión activa del negocio
-create or replace function public.get_baileys_session()
+-- ---------------------------------------------------------------------------
+-- El panel de Dlay
+-- ---------------------------------------------------------------------------
+create function public.platform_baileys_sessions()
 returns jsonb
 language plpgsql
+stable
 security definer
 set search_path = ''
 as $$
-declare
-  v_tenant uuid;
-  v_session record;
 begin
-  select m.tenant_id into v_tenant
-  from public.memberships m
-  where m.user_id = (select auth.uid())
-    and m.status = 'active'
-    and m.role in ('owner', 'admin')
-  limit 1;
-
-  if v_tenant is null then
-    return jsonb_build_object('ok', false, 'error', 'No encontramos tu negocio.');
+  if not (select app.is_platform_admin()) then
+    raise exception 'Esto es del panel de Dlay.' using errcode = '42501';
   end if;
 
-  select * into v_session
-  from public.baileys_sessions
-  where tenant_id = v_tenant
-    and status in ('connecting', 'connected')
-  order by created_at desc
-  limit 1;
-
-  if v_session is null then
-    return jsonb_build_object('ok', false, 'error', 'No hay sesión activa.');
-  end if;
-
-  return jsonb_build_object(
-    'ok', true,
-    'session_id', v_session.session_id,
-    'phone_number', v_session.phone_number,
-    'status', v_session.status,
-    'qr_code', v_session.qr_code,
-    'last_connected_at', v_session.last_connected_at
-  );
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'tenant_id',            s.tenant_id,
+      'negocio',              t.name,
+      'status',               s.status,
+      'phone_number',         s.phone_number,
+      'last_connected_at',    s.last_connected_at,
+      'last_message_sent_at', s.last_message_sent_at,
+      'error_message',        s.error_message,
+      'updated_at',           s.updated_at
+    ) order by t.name)
+    from public.baileys_sessions s
+    join public.tenants t on t.id = s.tenant_id
+  ), '[]'::jsonb);
 end;
 $$;
 
-revoke all on function public.get_baileys_session() from public, anon;
-grant execute on function public.get_baileys_session() to authenticated;
+comment on function public.platform_baileys_sessions() is
+  'Todas las conexiones de WhatsApp por QR. Sólo para platform_admins.';
+
+revoke all on function public.platform_baileys_sessions() from public, anon;
+grant execute on function public.platform_baileys_sessions() to authenticated;

@@ -52,6 +52,12 @@ export default async function PlataformaPage() {
           Los negocios que usan Dlay, lo que llevan del mes y lo que quedó sin
           cobrar.
         </p>
+        <Link
+          href="/plataforma/whatsapp"
+          className="mt-2 inline-block text-[13.5px] text-accent-text hover:underline"
+        >
+          Conexiones de WhatsApp por QR →
+        </Link>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">

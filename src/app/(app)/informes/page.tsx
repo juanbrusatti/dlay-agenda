@@ -14,6 +14,7 @@ import { formatDuration, formatPrice } from "@/lib/money";
 import { todayIn } from "@/lib/tz";
 import { Periodo } from "./_components/periodo";
 import { Proporcion } from "./_components/proporcion";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export const metadata: Metadata = { title: "Informes" };
 
@@ -373,7 +374,9 @@ export default async function InformesPage({
               <p className="text-[12.5px] leading-snug text-muted">
                 {messages.sent === 0
                   ? "No salió ningún aviso en este período."
-                  : messages.costCents === 0
+                  : !META_VISIBLE && messages.costCents === 0
+                    ? "Todo lo que salió fue gratis."
+                    : messages.costCents === 0
                     ? "Todo lo que salió fue gratis: el email y las notificaciones no se cobran, y los mensajes de WhatsApp dentro de una conversación ya abierta tampoco."
                     : "Sólo WhatsApp se cobra, y sólo cuando el negocio inicia la conversación. El email y las notificaciones son gratis."}
               </p>

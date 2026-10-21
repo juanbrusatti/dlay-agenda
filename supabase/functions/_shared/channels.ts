@@ -83,15 +83,21 @@ export async function send(job: Job): Promise<SendResult> {
   }
 
   const ctx = contextOf(job);
-  const body = render(job.template_body, ctx);
   const subject = job.template_subject
     ? render(job.template_subject, ctx)
     : undefined;
 
+  // Si el negocio vinculó su número con QR, WhatsApp sale por ahí: gratis y
+  // como texto común. Manda sobre la Cloud API aunque las dos estén cargadas.
+  const porQr = job.channel === "whatsapp" && (await baileysConectado(job.tenant_id));
+  const body = porQr
+    ? textoPorQr(job.template_body, ctx)
+    : render(job.template_body, ctx);
+
   if (job.test_mode) {
     // Se valida igual todo lo que haría falta para enviar de verdad: así el
     // modo de prueba sirve para detectar problemas, no sólo para no molestar.
-    const problema = validate(job);
+    const problema = porQr ? validateQr(job) : validate(job);
     return problema
       ? {
           ok: false,
@@ -106,7 +112,9 @@ export async function send(job: Job): Promise<SendResult> {
     case "email":
       return await sendEmail(job, subject, body);
     case "whatsapp":
-      return await sendWhatsApp(job, ctx, body);
+      return porQr
+        ? await sendWhatsAppQr(job, body)
+        : await sendWhatsApp(job, ctx, body);
     case "push":
       return await sendPush(job, subject, body);
   }
@@ -196,6 +204,94 @@ async function sendEmail(
     body,
     wasTest: false,
   };
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp · vinculado con QR (servidor Baileys, carpeta whatsapp-server/)
+// ---------------------------------------------------------------------------
+// Un emisor atiende a varios negocios en la misma corrida: se pregunta una
+// vez por negocio y no una vez por mensaje.
+const conectados = new Map<string, Promise<boolean>>();
+
+function baileysConectado(tenantId: string): Promise<boolean> {
+  if (!Deno.env.get("BAILEYS_SERVER_URL") || !Deno.env.get("BAILEYS_SECRET")) {
+    return Promise.resolve(false);
+  }
+  let pendiente = conectados.get(tenantId);
+  if (!pendiente) {
+    pendiente = (async () => {
+      const { data } = await createSupabaseClient()
+        .from("baileys_sessions")
+        .select("status")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      return data?.status === "connected";
+    })();
+    conectados.set(tenantId, pendiente);
+    // Que la respuesta no quede vieja si el emisor vive varios minutos.
+    setTimeout(() => conectados.delete(tenantId), 60_000);
+  }
+  return pendiente;
+}
+
+/**
+ * El texto que sale por QR.
+ *
+ * Por QR no hay botones de respuesta rápida, así que si la plantilla no trae
+ * el enlace del turno se le agrega al final: con ese enlace el cliente
+ * confirma, cancela o cambia el turno sin escribirle a nadie.
+ */
+function textoPorQr(template: string, ctx: RenderContext): string {
+  const texto = render(template, ctx).trim();
+  if (!ctx.manageUrl || /\{\{\s*link\s*\}\}/.test(template)) return texto;
+  return `${texto}\n\nPara confirmar, cancelar o cambiar el turno: ${ctx.manageUrl}`;
+}
+
+function validateQr(job: Job): string | null {
+  return job.client_phone ? null : "La ficha no tiene teléfono.";
+}
+
+async function sendWhatsAppQr(job: Job, body: string): Promise<SendResult> {
+  const problema = validateQr(job);
+  if (problema) {
+    return { ok: false, error: problema, wasTest: false, permanent: true };
+  }
+
+  const url = Deno.env.get("BAILEYS_SERVER_URL")!.replace(/\/$/, "");
+  const response = await fetch(`${url}/whatsapp/send`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-dlay-secret": Deno.env.get("BAILEYS_SECRET")!,
+    },
+    body: JSON.stringify({
+      tenantId: job.tenant_id,
+      to: job.client_phone,
+      text: body,
+    }),
+    // Un servidor gratis que se estaba despertando puede tardar en contestar.
+    signal: AbortSignal.timeout(45_000),
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data?.ok) {
+    return {
+      ok: false,
+      error: `WhatsApp por QR (${response.status}): ${data?.error ?? "sin detalle"}`,
+      wasTest: false,
+      // 422 es «ese número no tiene WhatsApp»: reintentar no lo arregla. Un
+      // servidor caído o desconectado sí puede volver, así que se reintenta.
+      permanent: response.status === 422 || response.status === 400,
+    };
+  }
+
+  // Por QR no se le paga nada a Meta: el mensaje no gasta del tope del mes.
+  await createSupabaseClient()
+    .from("message_jobs")
+    .update({ cost_cents: 0 })
+    .eq("id", job.job_id);
+
+  return { ok: true, providerId: data.messageId, body, wasTest: false };
 }
 
 // ---------------------------------------------------------------------------

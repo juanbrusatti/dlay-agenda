@@ -36,6 +36,8 @@ const serverSchema = publicSchema.extend({
    * ventana de 24 horas de la API oficial de Meta.
    */
   BAILEYS_SERVER_URL: z.string().url().optional(),
+  /** El secreto compartido con ese servidor. Sin él, no atiende a nadie. */
+  BAILEYS_SECRET: z.string().min(16).optional(),
 });
 
 /**
@@ -81,6 +83,7 @@ export function serverEnv() {
     ...rawPublic,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     MERCADOPAGO_ACCESS_TOKEN: process.env.MERCADOPAGO_ACCESS_TOKEN,
-    BAILEYS_SERVER_URL: process.env.BAILEYS_SERVER_URL,
+    BAILEYS_SERVER_URL: process.env.BAILEYS_SERVER_URL || undefined,
+    BAILEYS_SECRET: process.env.BAILEYS_SECRET || undefined,
   });
 }

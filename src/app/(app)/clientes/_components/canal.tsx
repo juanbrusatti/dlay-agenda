@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { setChannelModeAction } from "@/lib/actions/clients";
 import type { Database } from "@/lib/supabase/types";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 type Mode = Database["public"]["Enums"]["channel_mode"];
 
@@ -83,7 +84,9 @@ export function SelectorCanal({
         {mode === "email" &&
           "Siempre por correo, aunque tenga WhatsApp. No cuesta nada."}
         {mode === "whatsapp" &&
-          "Siempre por WhatsApp. Cada mensaje tiene un costo, usalo cuando el correo no funcione."}
+          (META_VISIBLE
+            ? "Siempre por WhatsApp. Cada mensaje tiene un costo, usalo cuando el correo no funcione."
+            : "Siempre por WhatsApp.")}
         {mode === "none" &&
           "No recibe recordatorios automáticos de ningún tipo."}
       </p>

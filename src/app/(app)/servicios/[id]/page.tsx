@@ -4,6 +4,7 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { updateService } from "@/lib/actions/services";
 import { getService, listCategories } from "@/lib/data/services";
 import { ServiceForm } from "../_components/service-form";
+import { getAvisosDelServicio } from "@/lib/data/avisos";
 
 export const metadata: Metadata = { title: "Editar servicio" };
 
@@ -18,9 +19,10 @@ export default async function EditarServicioPage({
   if (!membership) return null;
   if (!atLeast(membership.role, "admin")) notFound();
 
-  const [service, categories] = await Promise.all([
+  const [service, categories, avisos] = await Promise.all([
     getService(id),
     listCategories(),
+    getAvisosDelServicio(id, membership.tenant.name),
   ]);
 
   // Si el servicio es de otro negocio, la RLS ya devolvió null.
@@ -40,6 +42,7 @@ export default async function EditarServicioPage({
           action={action}
           service={service}
           categories={categories}
+          avisos={avisos}
           submitLabel="Guardar cambios"
         />
       </main>

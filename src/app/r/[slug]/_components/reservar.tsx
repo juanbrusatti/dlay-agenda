@@ -5,7 +5,6 @@ import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
-import { AvisosCliente } from "@/components/pwa/avisos-cliente";
 import { createBooking, getSlots } from "@/lib/actions/reserva";
 import { formatDuration, formatPrice } from "@/lib/money";
 import { longDateIn, nextDay, timeIn, todayIn } from "@/lib/tz";
@@ -20,13 +19,7 @@ type Paso = "servicios" | "cuando" | "datos" | "listo";
  * reserva quiere saber cuánto sale y cuánto le va a llevar antes de
  * comprometer una hora de su día.
  */
-export function Reservar({
-  page,
-  vapidPublicKey,
-}: {
-  page: BookingPage;
-  vapidPublicKey: string;
-}) {
+export function Reservar({ page }: { page: BookingPage }) {
   const tz = page.tenant.timezone;
 
   const [paso, setPaso] = useState<Paso>("servicios");
@@ -123,7 +116,7 @@ export function Reservar({
             )}
           </p>
           <p className="text-[13.5px] leading-relaxed opacity-80">
-            Te vamos a mandar un recordatorio antes.
+            Te vamos a mandar un recordatorio por WhatsApp antes.
           </p>
 
           {token && (
@@ -140,14 +133,6 @@ export function Reservar({
                 </a>
               </div>
 
-              {/* El único canal gratis del sistema, y este es el único momento
-                  en que el cliente tiene un motivo real para aceptarlo: acaba
-                  de reservar y le importa que le avisen. */}
-              <AvisosCliente
-                token={token}
-                vapidPublicKey={vapidPublicKey}
-                tono="acento"
-              />
             </>
           )}
         </CardBody>

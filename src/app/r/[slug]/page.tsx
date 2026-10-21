@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { getBookingPage } from "@/lib/data/reserva";
-import { publicEnv } from "@/lib/env";
 import { Reservar } from "./_components/reservar";
 
 export async function generateMetadata({
@@ -70,7 +69,6 @@ export default async function ReservarPage({
       ) : (
         <Reservar
           page={page}
-          vapidPublicKey={publicEnv.NEXT_PUBLIC_VAPID_PUBLIC_KEY}
         />
       )}
 

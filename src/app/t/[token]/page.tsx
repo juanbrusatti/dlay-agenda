@@ -1,11 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/brand/logo";
-import { AvisosCliente } from "@/components/pwa/avisos-cliente";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { Card, CardBody } from "@/components/ui/card";
 import { getManageView } from "@/lib/data/autogestion";
-import { publicEnv } from "@/lib/env";
 import { formatDuration, formatPrice } from "@/lib/money";
 import { longDateIn, timeIn } from "@/lib/tz";
 import { Acciones } from "./_components/acciones";
@@ -125,13 +123,6 @@ export default async function TurnoPublicoPage({
       </Card>
 
       <Acciones token={token} vista={vista} />
-
-      {activo && (
-        <AvisosCliente
-          token={token}
-          vapidPublicKey={publicEnv.NEXT_PUBLIC_VAPID_PUBLIC_KEY}
-        />
-      )}
 
       {vista.bookingOpen && !activo && (
         <Card>

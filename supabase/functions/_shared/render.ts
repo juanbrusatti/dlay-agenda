@@ -70,6 +70,10 @@ function completar(texto: string, values: Record<string, string>): string {
     // Un hueco vacío puede dejar espacios dobles o un espacio antes del punto.
     .replace(/ {2,}/g, " ")
     .replace(/ +([.,;:!?])/g, "$1")
+    // Y un párrafo vacío —el del mensaje del servicio, cuando no tiene— no
+    // tiene que dejar un hueco de cuatro renglones.
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

@@ -4,6 +4,7 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { createService } from "@/lib/actions/services";
 import { listCategories } from "@/lib/data/services";
 import { ServiceForm } from "../_components/service-form";
+import { getAvisosDelServicio } from "@/lib/data/avisos";
 
 export const metadata: Metadata = { title: "Nuevo servicio" };
 
@@ -15,7 +16,10 @@ export default async function NuevoServicioPage() {
   // no va a poder guardarse.
   if (!atLeast(membership.role, "admin")) notFound();
 
-  const categories = await listCategories();
+  const [categories, avisos] = await Promise.all([
+    listCategories(),
+    getAvisosDelServicio(null, membership.tenant.name),
+  ]);
 
   return (
     <>
@@ -28,6 +32,7 @@ export default async function NuevoServicioPage() {
         <ServiceForm
           action={createService}
           categories={categories}
+          avisos={avisos}
           submitLabel="Crear servicio"
         />
       </main>

@@ -18,23 +18,26 @@ import { timeIn } from "@/lib/tz";
 import { Freno } from "./_components/freno";
 import { ModoPrueba } from "./_components/modo-prueba";
 import { ListaReglas } from "./_components/lista-reglas";
+import { TablaAvisos } from "./_components/tabla-avisos";
+import { getAvisos } from "@/lib/data/avisos";
 
 import { META_VISIBLE } from "@/lib/canal-whatsapp";
 import { getBaileysSessionState } from "@/lib/actions/baileys";
 
-export const metadata: Metadata = { title: "Recordatorios" };
+export const metadata: Metadata = { title: "Avisos" };
 
 export default async function RecordatoriosPage() {
   const membership = await getCurrentTenant();
   if (!membership) return null;
 
-  const [rules, settings, cola, proximos, whatsapp, qr] = await Promise.all([
+  const [rules, settings, cola, proximos, whatsapp, qr, avisos] = await Promise.all([
     listRules(),
     getSettings(),
     getQueueSummary(),
     listUpcoming(10),
     META_VISIBLE ? getWhatsappStatus() : null,
     getBaileysSessionState(),
+    getAvisos(),
   ]);
 
   const puedeEditar = atLeast(membership.role, "admin");
@@ -54,24 +57,13 @@ export default async function RecordatoriosPage() {
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-[28px] font-bold leading-tight tracking-[-0.03em]">
-              Recordatorios
+              Avisos
             </h1>
             <p className="mt-1 max-w-prose text-[14.5px] text-muted">
-              Las reglas que avisan solas. Cada una dice cuándo y a quiénes, y
-              el aviso le llega a cada cliente por WhatsApp.
+              Los recordatorios que le llegan solos a tus clientes por WhatsApp
+              antes del turno.
             </p>
           </div>
-
-          {puedeEditar && (
-            <div className="flex gap-2">
-              <Button asChild variant="outline">
-                <Link href="/recordatorios/plantillas">Plantillas</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/recordatorios/nuevo">Nueva regla</Link>
-              </Button>
-            </div>
-          )}
         </header>
 
         {META_VISIBLE && <ReglasWhatsapp costo />}
@@ -99,6 +91,12 @@ export default async function RecordatoriosPage() {
             </p>
           </div>
         )}
+
+        <TablaAvisos
+          servicios={avisos.servicios}
+          reglas={avisos.reglas}
+          puedeEditar={puedeEditar}
+        />
 
         {/* La tasa de lectura y la calidad las informa el webhook de Meta. */}
         {META_VISIBLE && cola.readRate !== null && cola.readRate < 0.5 && (
@@ -132,7 +130,7 @@ export default async function RecordatoriosPage() {
               <CardFigure>{cola.pending}</CardFigure>
               <p className="text-[12.5px] text-muted">
                 en cola para salir
-                {cola.plannedCents > 0 && ` · ${formatPrice(cola.plannedCents)}`}
+                {META_VISIBLE && cola.plannedCents > 0 && ` · ${formatPrice(cola.plannedCents)}`}
               </p>
             </CardBody>
           </Card>
@@ -142,7 +140,7 @@ export default async function RecordatoriosPage() {
               <CardFigure>{cola.sent}</CardFigure>
               <p className="text-[12.5px] text-muted">
                 enviados este mes ·{" "}
-                {settings?.test_mode ? "de prueba" : formatPrice(cola.spentCents)}
+                {settings?.test_mode ? "de prueba" : META_VISIBLE ? formatPrice(cola.spentCents) : "reales"}
                 {cola.readRate !== null &&
                   ` · ${Math.round(cola.readRate * 100)} % leídos`}
               </p>
@@ -160,43 +158,6 @@ export default async function RecordatoriosPage() {
             </CardBody>
           </Card>
         </div>
-
-        {rules.length === 0 ? (
-          <EmptyState
-            eyebrow="Todo a mano"
-            title="Todavía no hay ninguna regla"
-            action={
-              puedeEditar ? (
-                <Button asChild size="lg">
-                  <Link href="/recordatorios/nuevo">Armar la primera</Link>
-                </Button>
-              ) : undefined
-            }
-          >
-            <p>
-              Una regla es una frase: <em>cuando falten 24 horas para el turno,
-              avisarle por correo y, si no tiene, por WhatsApp</em>. La armás una
-              vez y no la tocás más.
-            </p>
-            <p className="mt-2">
-              Antes de activarla vas a ver a cuánta gente le llega y cuánto
-              cuesta.
-            </p>
-          </EmptyState>
-        ) : (
-          <section className="grid gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[17px] font-semibold tracking-[-0.02em]">
-                Reglas
-              </h2>
-              <p className="text-[13px] text-muted">
-                {activas} {activas === 1 ? "activa" : "activas"} de{" "}
-                {rules.length}
-              </p>
-            </div>
-            <ListaReglas rules={rules} />
-          </section>
-        )}
 
         {proximos.length > 0 && (
           <section className="grid gap-3">
@@ -226,9 +187,11 @@ export default async function RecordatoriosPage() {
                       <p className="truncate text-[12.5px] text-muted">
                         {salteado
                           ? (j.skip_reason ?? "Salteado")
-                          : `${j.rule?.name ?? "Regla"} · ${
-                              j.channel ? CHANNEL_LABELS[j.channel] : "sin canal"
-                            }`}
+                          : META_VISIBLE
+                            ? `${j.rule?.name ?? "Regla"} · ${
+                                j.channel ? CHANNEL_LABELS[j.channel] : "sin canal"
+                              }`
+                            : (j.rule?.name ?? "Aviso")}
                       </p>
                     </div>
 
@@ -237,7 +200,7 @@ export default async function RecordatoriosPage() {
                         {cuando.format(new Date(j.scheduled_for))}{" "}
                         {timeIn(j.scheduled_for, tz)}
                       </p>
-                      {j.cost_cents > 0 && (
+                      {META_VISIBLE && j.cost_cents > 0 && (
                         <p className="text-[12px] tabular-nums text-faint">
                           {formatPrice(j.cost_cents)}
                         </p>
@@ -248,6 +211,68 @@ export default async function RecordatoriosPage() {
               })}
             </ul>
           </section>
+        )}
+
+        {puedeEditar && (
+          <details className="group rounded-card border-[1.5px] border-line bg-surface">
+            <summary className="cursor-pointer list-none px-4 py-3.5 text-[14.5px] font-semibold">
+              <span className="mr-2 inline-block transition-transform group-open:rotate-90">›</span>
+              Opciones avanzadas
+              <span className="block pl-5 text-[12.5px] font-normal text-muted">
+                Reglas a medida, el saludo y el cierre de los mensajes, y a quiénes
+                avisar. Para la mayoría de los negocios no hace falta tocar nada.
+              </span>
+            </summary>
+            <div className="grid gap-4 border-t-[1.5px] border-line px-4 py-4">
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/recordatorios/plantillas">Saludo y cierre de los mensajes</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/recordatorios/nuevo">Nueva regla</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/configuracion/mensajeria">Horario de envío</Link>
+                </Button>
+              </div>
+        {rules.length === 0 ? (
+            <EmptyState
+              eyebrow="Todo a mano"
+              title="Todavía no hay ninguna regla"
+              action={
+                puedeEditar ? (
+                  <Button asChild size="lg">
+                    <Link href="/recordatorios/nuevo">Armar la primera</Link>
+                  </Button>
+                ) : undefined
+              }
+            >
+              <p>
+                Una regla es una frase: <em>cuando falten 24 horas para el turno,
+                avisarle por correo y, si no tiene, por WhatsApp</em>. La armás una
+                vez y no la tocás más.
+              </p>
+              <p className="mt-2">
+                Antes de activarla vas a ver a cuánta gente le llega y cuánto
+                cuesta.
+              </p>
+            </EmptyState>
+          ) : (
+            <section className="grid gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[17px] font-semibold tracking-[-0.02em]">
+                  Reglas
+                </h2>
+                <p className="text-[13px] text-muted">
+                  {activas} {activas === 1 ? "activa" : "activas"} de{" "}
+                  {rules.length}
+                </p>
+              </div>
+              <ListaReglas rules={rules} />
+            </section>
+          )}
+            </div>
+          </details>
         )}
 
         {settings?.sending_enabled && puedeEditar && rules.length > 0 && (

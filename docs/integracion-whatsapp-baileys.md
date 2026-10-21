@@ -1,6 +1,6 @@
 # Integración de WhatsApp con Baileys (Modo Dispositivo Vinculado)
 
-Este documento explica paso a paso cómo implementar y usar la integración de WhatsApp usando Baileys, que permite conectar un número como "dispositivo vinculado" sin la ventana de 24 horas de la API oficial de Meta.
+Este documento explica paso a paso cómo implementar y usar la integración de WhatsApp usando Baileys.
 
 ## Índice
 
@@ -22,11 +22,9 @@ Este documento explica paso a paso cómo implementar y usar la integración de W
 Baileys es una librería de TypeScript/JavaScript que imita el funcionamiento de WhatsApp Web. Permite:
 
 - Conectar un número de WhatsApp como "dispositivo vinculado"
-- Enviar y recibir mensajes sin usar la API oficial de Meta
-- Evitar la ventana de 24 horas que tiene la API oficial
 - Que el número siga funcionando normalmente en el celular
 
-**Importante:** Baileys es una librería no oficial. Su uso debe hacerse con cuidado y respetando los términos de servicio de WhatsApp.
+
 
 ---
 
@@ -36,12 +34,10 @@ Baileys es una librería de TypeScript/JavaScript que imita el funcionamiento de
 
 - **Sin ventana de 24 horas:** Podés enviar mensajes en cualquier momento, no solo cuando el cliente te escribió primero
 - **El número sigue funcionando en el celular:** Los mensajes también aparecen en tu teléfono
-- **Sin costo por mensaje:** A diferencia de la API oficial de Meta, no hay costo por mensaje enviado
 - **Funciona como WhatsApp Web:** Es el mismo proceso de escanear un QR
 
 ### Desventajas
 
-- **No es oficial:** Baileys no está respaldado por Meta, por lo que podría dejar de funcionar si WhatsApp cambia su protocolo
 - **Riesgo de bloqueo:** Si WhatsApp detecta comportamiento automatizado, podría bloquear el número
 - **Gestión de sesiones:** Las sesiones pueden desconectarse y necesitan reconexión periódica
 
@@ -515,12 +511,3 @@ Si tenés problemas:
 2. Revisá los logs del servidor Baileys
 3. Revisá los logs de Supabase
 4. Verificá la documentación de Baileys: https://github.com/WhiskeySockets/Baileys
-
----
-
-## Notas legales
-
-- Baileys es una librería no oficial. Su uso es responsabilidad del usuario.
-- Asegurate de cumplir con los términos de servicio de WhatsApp.
-- Este sistema es para uso defensivo y legítimo (recordatorios de turnos, etc).
-- No uses este sistema para spam o actividades ilegales.

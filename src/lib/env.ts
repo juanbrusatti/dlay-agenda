@@ -30,6 +30,12 @@ const serverSchema = publicSchema.extend({
    * lo único que no anda es el botón de pagar, y la pantalla lo dice.
    */
   MERCADOPAGO_ACCESS_TOKEN: z.string().optional(),
+  /**
+   * URL del servidor Baileys para conexiones tipo WhatsApp Web.
+   * Baileys permite conectar un número como dispositivo vinculado sin la
+   * ventana de 24 horas de la API oficial de Meta.
+   */
+  BAILEYS_SERVER_URL: z.string().url().optional(),
 });
 
 /**
@@ -75,5 +81,6 @@ export function serverEnv() {
     ...rawPublic,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     MERCADOPAGO_ACCESS_TOKEN: process.env.MERCADOPAGO_ACCESS_TOKEN,
+    BAILEYS_SERVER_URL: process.env.BAILEYS_SERVER_URL,
   });
 }

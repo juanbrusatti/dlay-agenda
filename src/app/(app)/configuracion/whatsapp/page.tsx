@@ -12,6 +12,7 @@ import { Asistente } from "./asistente";
 import { FormWhatsapp } from "./form";
 import { Webhook } from "./webhook";
 import { RevisionWhatsapp } from "./revision";
+import { BaileysLink } from "./baileys";
 
 export const metadata: Metadata = { title: "WhatsApp" };
 
@@ -155,6 +156,8 @@ export default async function WhatsappPage() {
           <RevisionWhatsapp />
 
           <FormWhatsapp conectada verifyToken={verifyToken} />
+
+          <BaileysLink />
 
           <p className="px-1 text-[12.5px] leading-relaxed text-faint">
             El token se guarda del lado del servidor, en una tabla que el panel

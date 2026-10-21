@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 /**
  * El mensaje que este servicio le suma al recordatorio.
@@ -104,7 +105,7 @@ export function MensajeDelServicio({ defaultValue }: { defaultValue: string }) {
         </div>
       )}
 
-      {tieneRenglones && (
+      {META_VISIBLE && tieneRenglones && (
         <p
           role="status"
           className="rounded-[14px] bg-warn-wash px-3.5 py-2.5 text-[13px] leading-snug text-ink"

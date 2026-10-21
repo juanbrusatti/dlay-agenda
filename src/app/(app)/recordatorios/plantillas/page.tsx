@@ -6,6 +6,8 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { listTemplates } from "@/lib/data/recordatorios";
 import { CHANNEL_LABELS } from "@/lib/recordatorios";
 
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
+
 export const metadata: Metadata = { title: "Mensajes" };
 
 export default async function PlantillasPage() {
@@ -60,10 +62,12 @@ export default async function PlantillasPage() {
               Un mensaje es el texto que se envía, con huecos que el sistema
               completa: el nombre del cliente, la fecha y la hora de su turno.
             </p>
-            <p className="mt-2">
-              Los de WhatsApp además tienen que estar aprobados por Meta antes
-              de poder usarse.
-            </p>
+            {META_VISIBLE && (
+              <p className="mt-2">
+                Los de WhatsApp además tienen que estar aprobados por Meta antes
+                de poder usarse.
+              </p>
+            )}
           </EmptyState>
         ) : (
           <ul className="grid gap-2">
@@ -78,7 +82,8 @@ export default async function PlantillasPage() {
                     <span className="rounded-pill bg-accent-wash px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-accent-text">
                       {CHANNEL_LABELS[t.channel]}
                     </span>
-                    {t.channel === "whatsapp" &&
+                    {META_VISIBLE &&
+                      t.channel === "whatsapp" &&
                       t.provider_status !== "approved" && (
                         <span className="rounded-pill bg-warn-wash px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-warn">
                           Sin aprobar en Meta

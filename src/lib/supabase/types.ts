@@ -342,6 +342,76 @@ export type Database = {
           },
         ]
       }
+      baileys_auth: {
+        Row: {
+          key: string
+          tenant_id: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          tenant_id: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          tenant_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baileys_auth_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      baileys_sessions: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          last_connected_at: string | null
+          last_message_sent_at: string | null
+          phone_number: string | null
+          qr_code: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          last_connected_at?: string | null
+          last_message_sent_at?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          last_connected_at?: string | null
+          last_message_sent_at?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baileys_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_amounts: {
         Row: {
           amount_cents: number
@@ -2185,6 +2255,47 @@ export type Database = {
       }
     }
     Views: {
+      baileys_sessions_view: {
+        Row: {
+          error_message: string | null
+          last_connected_at: string | null
+          last_message_sent_at: string | null
+          phone_number: string | null
+          qr_code: string | null
+          status: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          last_connected_at?: string | null
+          last_message_sent_at?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          last_connected_at?: string | null
+          last_message_sent_at?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baileys_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_mensajes: {
         Row: {
           body: string | null
@@ -2352,6 +2463,7 @@ export type Database = {
         }
       }
       platform_accounts: { Args: never; Returns: Json }
+      platform_baileys_sessions: { Args: never; Returns: Json }
       platform_mark_paid: {
         Args: { p_note?: string; p_period: string; p_tenant: string }
         Returns: Json

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { createClient } from "@/lib/supabase/server";
 import type { Channel, Simulation, Trigger } from "@/lib/data/recordatorios";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export type FormState = {
   error: string | null;
@@ -324,7 +325,9 @@ export async function saveTemplate(
 
   const v = parsed.data;
 
-  if (v.channel === "whatsapp" && !v.providerName) {
+  // Por QR no hay plantillas aprobadas: el nombre en Meta sólo hace falta
+  // cuando la Cloud API está a la vista.
+  if (META_VISIBLE && v.channel === "whatsapp" && !v.providerName) {
     return {
       error:
         "Una plantilla de WhatsApp necesita el nombre exacto con el que la aprobó Meta.",

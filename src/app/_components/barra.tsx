@@ -5,6 +5,7 @@ import { signOut } from "@/lib/actions/auth";
 import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { getSinVer } from "@/lib/data/mensajes";
 import { AvisoMensajes } from "./aviso-mensajes";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 import { NavLink } from "./nav-link";
 
 /**
@@ -21,7 +22,8 @@ export async function Barra({ tenantName }: { tenantName: string }) {
   const role = membership?.role ?? "staff";
   const veLaPlata = atLeast(role, "reception");
   const veElNegocio = atLeast(role, "admin");
-  const sinVer = membership ? await getSinVer(membership.tenant.id) : 0;
+  // La bandeja de Mensajes lee lo que llega por la Cloud API de Meta.
+  const sinVer = membership && META_VISIBLE ? await getSinVer(membership.tenant.id) : 0;
 
   return (
     <header className="sticky top-3 z-20 mx-auto w-full max-w-4xl px-4">
@@ -47,7 +49,7 @@ export async function Barra({ tenantName }: { tenantName: string }) {
           {veLaPlata && <NavLink href="/caja">Caja</NavLink>}
           {veElNegocio && <NavLink href="/informes">Informes</NavLink>}
           <NavLink href="/servicios">Servicios</NavLink>
-          {membership && (
+          {membership && META_VISIBLE && (
             <AvisoMensajes tenantId={membership.tenant.id} sinVer={sinVer} />
           )}
           <NavLink href="/recordatorios">Avisos</NavLink>

@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/money";
 import { Volver } from "../_components/volver";
 import { Pagar } from "./pagar";
 import { CuentaSuscripcion } from "./suscripcion";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 export const metadata: Metadata = { title: "Tu cuenta" };
 
@@ -176,8 +177,8 @@ export default async function CuentaPage() {
             porque el sistema no sabe cuánto salieron.{" "}
           </>
         )}
-        Los mensajes de WhatsApp no están acá: los cobra Meta directamente
-        contra la tarjeta que cargaste en tu cuenta de WhatsApp.
+        {META_VISIBLE &&
+          "Los mensajes de WhatsApp no están acá: los cobra Meta directamente contra la tarjeta que cargaste en tu cuenta de WhatsApp."}
       </p>
     </main>
   );

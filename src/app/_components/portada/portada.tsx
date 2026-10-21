@@ -9,6 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { DemoAutomatica } from "./demo-automatica";
 import { DemoRecordatorio } from "./demo-recordatorio";
+import { META_VISIBLE } from "@/lib/canal-whatsapp";
 
 /**
  * La portada: lo único que ve alguien que todavía no sabe qué es Dlay.
@@ -106,7 +107,11 @@ export function Portada() {
         {/* ── El precio ──────────────────────────────────────────────── */}
         <Seccion
           titulo={`Un mes gratis. Después, ${formatPrice(ABONO_MENSUAL_CENTS)} por mes.`}
-          bajada="Un abono fijo, tengas diez turnos o quinientos, sin porcentajes. Lo único aparte son los mensajes de WhatsApp, y esos los cobra Meta, no nosotros."
+          bajada={
+            META_VISIBLE
+              ? "Un abono fijo, tengas diez turnos o quinientos, sin porcentajes. Lo único aparte son los mensajes de WhatsApp, y esos los cobra Meta, no nosotros."
+              : "Un abono fijo, tengas diez turnos o quinientos, sin porcentajes. Los recordatorios por WhatsApp no se cobran aparte."
+          }
         >
           <div className="grid gap-3 sm:grid-cols-3">
             {[
@@ -114,10 +119,15 @@ export function Portada() {
                 "30 días gratis",
                 `Desde que creás la cuenta, con todo funcionando. Después son ${formatPrice(ABONO_MENSUAL_CENTS)} cada 30 días.`,
               ],
-              [
-                "Los mensajes, aparte",
-                `Meta cobra cada recordatorio que sale por WhatsApp —hoy ${formatPriceExacto(COSTO_MENSAJE_META_CENTS)}—, también durante la prueba, contra tu propia tarjeta. No pasa por nosotros.`,
-              ],
+              META_VISIBLE
+                ? [
+                    "Los mensajes, aparte",
+                    `Meta cobra cada recordatorio que sale por WhatsApp —hoy ${formatPriceExacto(COSTO_MENSAJE_META_CENTS)}—, también durante la prueba, contra tu propia tarjeta. No pasa por nosotros.`,
+                  ]
+                : [
+                    "Los mensajes, incluidos",
+                    "Los recordatorios salen desde tu propio número de WhatsApp, sin costo por mensaje.",
+                  ],
               [
                 "Sin permanencia",
                 "Te vas cuando quieras y te llevás tus clientes y tus turnos en un archivo.",
@@ -143,6 +153,8 @@ export function Portada() {
         </Seccion>
 
         {/* ── WhatsApp, antes de conectar ───────────────────────────── */}
+        {/* Son las reglas de la Cloud API de Meta; por QR no aplican. */}
+        {META_VISIBLE && (
         <Seccion
           titulo="Antes de conectar WhatsApp, dos cosas."
           bajada="Son reglas de WhatsApp, no nuestras. Conviene saberlas antes de arrancar y no después."
@@ -170,6 +182,7 @@ export function Portada() {
             ))}
           </div>
         </Seccion>
+        )}
 
         {/* ── El cierre ──────────────────────────────────────────────── */}
         <section className="grid gap-5 rounded-card border-[1.5px] border-accent bg-accent p-7 text-on-accent sm:p-10">

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Las Edge Functions corren en Deno, con sus propias globales y sus
     // importaciones por URL. Las revisa `deno lint`, no ESLint.
     "supabase/functions/**",
+    // El servidor de WhatsApp es otro proyecto, con su propio tsconfig.
+    "whatsapp-server/**",
   ]),
 ]);
 

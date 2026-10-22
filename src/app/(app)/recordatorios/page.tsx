@@ -87,7 +87,7 @@ export default async function RecordatoriosPage() {
             <p className="mt-0.5 max-w-prose text-[13.5px] leading-relaxed text-muted">
               {META_VISIBLE
                 ? "Los recordatorios que caigan en WhatsApp no van a poder salir hasta que conectes la cuenta de Meta. Los que van por correo sí funcionan."
-                : "Los recordatorios que caigan en WhatsApp no van a poder salir hasta que conectes el número en Ajustes → WhatsApp. Los que van por correo sí funcionan."}
+                : "Los recordatorios no van a poder salir hasta que conectes el número en Ajustes → WhatsApp."}
             </p>
           </div>
         )}
@@ -141,7 +141,9 @@ export default async function RecordatoriosPage() {
               <p className="text-[12.5px] text-muted">
                 enviados este mes ·{" "}
                 {settings?.test_mode ? "de prueba" : META_VISIBLE ? formatPrice(cola.spentCents) : "reales"}
-                {cola.readRate !== null &&
+                {/* Lo informa el webhook de Meta; por QR no hay lectura. */}
+                {META_VISIBLE &&
+                  cola.readRate !== null &&
                   ` · ${Math.round(cola.readRate * 100)} % leídos`}
               </p>
             </CardBody>

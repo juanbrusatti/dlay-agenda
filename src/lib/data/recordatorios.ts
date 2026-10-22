@@ -177,7 +177,14 @@ export async function listUpcoming(limit = 20): Promise<UpcomingJob[]> {
     .select(
       "id, channel, scheduled_for, status, cost_cents, skip_reason, client:clients ( id, first_name, last_name ), rule:reminder_rules ( name )",
     )
-    .in("status", ["pending", "skipped"])
+    // Los salteados sirven para entender por qué alguien no va a recibir su
+    // aviso, pero sólo los recientes: uno de hace un mes ya no dice nada y,
+    // como la lista se ordena por fecha, tapaba a los que de verdad van a salir.
+    .or(
+      `status.eq.pending,and(status.eq.skipped,scheduled_for.gte.${new Date(
+        Date.now() - 24 * 60 * 60 * 1000,
+      ).toISOString()})`,
+    )
     .order("scheduled_for", { ascending: true })
     .limit(limit);
 

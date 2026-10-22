@@ -6,6 +6,8 @@ import { getSuscripcion } from "@/lib/data/suscripcion";
 import { formatFecha } from "@/lib/suscripcion";
 import { Recorrido } from "@/app/_components/guia/recorrido";
 import { getGuiaVista } from "@/lib/data/guia";
+import { getWhatsappCaido } from "@/lib/data/whatsapp";
+import { AvisoWhatsappCaido } from "@/app/_components/aviso-whatsapp-caido";
 
 /**
  * El marco de las pantallas con sesión.
@@ -32,11 +34,13 @@ export default async function AppLayout({
   // El recorrido se abre solo una vez por persona, y sólo con un negocio
   // creado: antes no hay menú que mostrar.
   const guiaPendiente = membership ? !(await getGuiaVista()) : false;
+  const whatsappCaido = membership ? await getWhatsappCaido(membership.tenant.id) : false;
 
   return (
     <>
       {membership && <Barra tenantName={membership.tenant.name} />}
       {membership && <Recorrido abrirSolo={guiaPendiente} />}
+      {whatsappCaido && <AvisoWhatsappCaido />}
       {suscripcion && paga && <AvisoSuscripcion s={suscripcion} />}
       <MuroSuspension
         activo={suscripcion?.estado === "suspendida"}

@@ -246,6 +246,7 @@ export class Sessions {
             qr_code: null,
             error_message: "Se desvinculó desde el teléfono. Vinculalo de nuevo.",
           });
+          await this.avisarCaida(tenantId, "se desvinculó desde el teléfono");
           return;
         }
 
@@ -256,6 +257,7 @@ export class Sessions {
             status: "error",
             error_message: "La sesión se abrió en otro servidor.",
           });
+          await this.avisarCaida(tenantId, "la sesión se abrió en otro servidor");
           return;
         }
 
@@ -279,6 +281,51 @@ export class Sessions {
         }, wait);
       }
     });
+  }
+
+  /**
+   * Avisa por WhatsApp, desde el número de Dlay, que un negocio se quedó sin
+   * conexión: al número del negocio y, si está cargado, al de quien atiende
+   * Dlay. La notificación de la app sólo le llega a quien la activó; un
+   * WhatsApp lo lee cualquiera.
+   *
+   * Nunca rompe nada: si Dlay mismo es el que se cayó, o no está conectado,
+   * no hay desde dónde mandarlo y queda el aviso del panel.
+   */
+  private async avisarCaida(tenantId: string, motivo: string) {
+    const desde = process.env.DLAY_TENANT_ID;
+    if (!desde || desde === tenantId || !this.isConnected(desde)) return;
+
+    try {
+      const [{ data: negocio }, { data: sesion }] = await Promise.all([
+        this.supabase.from("tenants").select("name").eq("id", tenantId).maybeSingle(),
+        this.supabase.from("baileys_sessions").select("phone_number").eq("tenant_id", tenantId).maybeSingle(),
+      ]);
+      const nombre = negocio?.name ?? "tu negocio";
+
+      if (sesion?.phone_number) {
+        await this.send(
+          desde,
+          sesion.phone_number,
+          `Hola! Te escribimos de Dlay Agenda. El WhatsApp de ${nombre} se desconectó ` +
+            "de la agenda, así que los recordatorios no están saliendo. Para volver a " +
+            "conectarlo entrá a Ajustes → WhatsApp y escaneá el código, como en WhatsApp " +
+            "Web. Si lo desvinculaste a propósito, ignorá este mensaje.",
+        );
+      }
+
+      // Se carga como se dicta, «3584123456»: el 549 lo ponemos acá.
+      const soporte = process.env.AVISOS_TELEFONO?.replace(/\D/g, "");
+      if (soporte) {
+        await this.send(
+          desde,
+          soporte.startsWith("54") ? soporte : `549${soporte}`,
+          `Se cayó el WhatsApp de ${nombre} (${sesion?.phone_number ?? "sin número"}): ${motivo}.`,
+        );
+      }
+    } catch (e) {
+      logger.error({ e, tenantId }, "no se pudo avisar la caída");
+    }
   }
 
   private async update(tenantId: string, fields: Record<string, unknown>) {

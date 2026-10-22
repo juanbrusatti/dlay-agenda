@@ -133,7 +133,9 @@ export function Acciones({
       {panel === "nada" && (
         <Card>
           <CardBody className="grid gap-3">
-            <CardTitle>¿Necesitás cambiar algo?</CardTitle>
+            <CardTitle>
+              {vista.can.cancel || vista.can.reschedule ? "¿Necesitás cambiar algo?" : "¿Venís?"}
+            </CardTitle>
 
             {vista.can.confirm && (
               <Button
@@ -167,14 +169,17 @@ export function Acciones({
               </Button>
             )}
 
-            <p className="text-[12.5px] leading-snug text-muted">
-              Se puede hasta {vista.cancelMinHours}{" "}
-              {vista.cancelMinHours === 1 ? "hora" : "horas"} antes del turno.
-              {vista.can.reschedule &&
-                ` Te ${vista.reschedulesLeft === 1 ? "queda" : "quedan"} ${vista.reschedulesLeft} ${
-                  vista.reschedulesLeft === 1 ? "cambio" : "cambios"
-                } de horario.`}
-            </p>
+            {/* Con sólo «Confirmar» no hay plazo que explicar. */}
+            {(vista.can.cancel || vista.can.reschedule) && (
+              <p className="text-[12.5px] leading-snug text-muted">
+                Se puede hasta {vista.cancelMinHours}{" "}
+                {vista.cancelMinHours === 1 ? "hora" : "horas"} antes del turno.
+                {vista.can.reschedule &&
+                  ` Te ${vista.reschedulesLeft === 1 ? "queda" : "quedan"} ${vista.reschedulesLeft} ${
+                    vista.reschedulesLeft === 1 ? "cambio" : "cambios"
+                  } de horario.`}
+              </p>
+            )}
 
             {error && (
               <p

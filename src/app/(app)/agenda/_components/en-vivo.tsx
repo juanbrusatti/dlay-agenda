@@ -92,7 +92,7 @@ export function EnVivo({ tenantId }: { tenantId: string }) {
       aria-pressed={activo}
       title={
         activo
-          ? "Suena cuando un cliente confirma o cancela desde WhatsApp"
+          ? "Suena cuando un cliente confirma o cancela desde su enlace"
           : "Sin sonido cuando un cliente confirma o cancela"
       }
       className="inline-flex items-center gap-1.5 rounded-pill border-[1.5px]

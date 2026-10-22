@@ -4,6 +4,8 @@ import { MuroSuspension } from "@/app/_components/suscripcion/muro";
 import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { getSuscripcion } from "@/lib/data/suscripcion";
 import { formatFecha } from "@/lib/suscripcion";
+import { Recorrido } from "@/app/_components/guia/recorrido";
+import { getGuiaVista } from "@/lib/data/guia";
 
 /**
  * El marco de las pantallas con sesión.
@@ -27,10 +29,14 @@ export default async function AppLayout({
     ? await getSuscripcion(membership.tenant.id)
     : null;
   const paga = membership ? atLeast(membership.role, "admin") : false;
+  // El recorrido se abre solo una vez por persona, y sólo con un negocio
+  // creado: antes no hay menú que mostrar.
+  const guiaPendiente = membership ? !(await getGuiaVista()) : false;
 
   return (
     <>
       {membership && <Barra tenantName={membership.tenant.name} />}
+      {membership && <Recorrido abrirSolo={guiaPendiente} />}
       {suscripcion && paga && <AvisoSuscripcion s={suscripcion} />}
       <MuroSuspension
         activo={suscripcion?.estado === "suspendida"}

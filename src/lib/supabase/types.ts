@@ -1562,6 +1562,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           full_name: string | null
+          guide_seen_at: string | null
           id: string
           updated_at: string
         }
@@ -1569,6 +1570,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          guide_seen_at?: string | null
           id: string
           updated_at?: string
         }
@@ -1576,6 +1578,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          guide_seen_at?: string | null
           id?: string
           updated_at?: string
         }

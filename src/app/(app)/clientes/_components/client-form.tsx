@@ -74,7 +74,7 @@ export function ClientForm({
 
       <Card>
         <CardBody className="grid gap-5">
-          <CardTitle>Cómo la contactamos</CardTitle>
+          <CardTitle>Cómo contactarlo</CardTitle>
 
           <div className="grid gap-3">
             <Field
@@ -154,7 +154,7 @@ export function ClientForm({
               name="birthdate"
               type="date"
               defaultValue={text("birthdate", client?.birthdate ?? "")}
-              hint="Para poder saludarla ese día."
+              hint="Para poder saludarlo ese día."
             />
           </div>
 

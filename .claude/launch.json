@@ -23,6 +23,16 @@
       ],
       "port": 3200,
       "autoPort": false
+    },
+    {
+      "name": "dlay-produccion-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "set -a; . ./.env.local; set +a; npx next start --port 3300"
+      ],
+      "port": 3300,
+      "autoPort": false
     }
   ]
 }

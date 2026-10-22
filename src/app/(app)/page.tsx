@@ -6,7 +6,9 @@ import { CrearNegocio } from "@/app/_components/crear-negocio";
 import { TenelaAMano } from "@/components/pwa/tenela-a-mano";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { Card, CardBody, CardFigure, CardTitle } from "@/components/ui/card";
-import { getCurrentTenant, getCurrentUser } from "@/lib/auth/tenant";
+import { atLeast, getCurrentTenant, getCurrentUser } from "@/lib/auth/tenant";
+import { getPrimerosPasos } from "@/lib/data/guia";
+import { PrimerosPasos } from "./_components/primeros-pasos";
 import { getCartel } from "@/lib/data/cuenta";
 import { getPublicLink } from "@/lib/data/reserva";
 import { publicEnv } from "@/lib/env";
@@ -44,6 +46,12 @@ export default async function InicioPage() {
 
   const nombre = user?.user_metadata?.full_name?.split(" ")[0] ?? "Hola";
 
+  // Los primeros pasos son de quien arma el negocio. A recepción o a un
+  // profesional no le toca conectar WhatsApp ni cargar precios.
+  const pasos = atLeast(membership.role, "admin")
+    ? await getPrimerosPasos(membership.tenantId)
+    : null;
+
   return (
     <>
       <RegisterServiceWorker />
@@ -63,6 +71,8 @@ export default async function InicioPage() {
           es lo primero que hay que ver al entrar.
         */}
         {cartel && <CartelCuenta cartel={cartel} />}
+
+        {pasos && <PrimerosPasos pasos={pasos} />}
 
         {/*
           Va arriba a propósito: instalar la aplicación y prender los avisos son

@@ -180,7 +180,11 @@ export class Sessions {
 
     const entry: Entry = {
       socket,
-      paired: Boolean(state.creds.registered),
+      // `creds.me` aparece cuando el teléfono aprobó el vínculo. Ojo: NO es
+      // `creds.registered`, que Baileys sólo marca al vincular con código
+      // numérico. Con QR queda en false para siempre, y usarlo hacía que
+      // después de cada reinicio un corte se tomara por «venció el código».
+      paired: Boolean(state.creds.me?.id),
       closing: false,
       retries,
     };

@@ -112,13 +112,21 @@ export async function send(job: Job): Promise<SendResult> {
     case "email":
       return await sendEmail(job, subject, body);
     case "whatsapp":
-      return porQr
-        ? await sendWhatsAppQr(job, body)
-        : await sendWhatsApp(job, ctx, body);
+      if (porQr) return await sendWhatsAppQr(job, body);
+      // Ni QR ni Meta: se reintenta en vez de darlo por perdido. Si el negocio
+      // vincula el número en la próxima hora, el recordatorio sale igual.
+      if (!job.phone_number_id || !job.access_token) {
+        return { ok: false, error: SIN_WHATSAPP, wasTest: false, permanent: false };
+      }
+      return await sendWhatsApp(job, ctx, body);
     case "push":
       return await sendPush(job, subject, body);
   }
 }
+
+/** Lo que ve el negocio cuando un aviso no sale porque no vinculó su número. */
+const SIN_WHATSAPP =
+  "Tu WhatsApp no está conectado. Conectalo en Ajustes → WhatsApp escaneando el código.";
 
 /** Qué falta para poder enviar. Null si está todo. */
 function validate(job: Job): string | null {
@@ -131,7 +139,7 @@ function validate(job: Job): string | null {
   if (job.channel === "whatsapp") {
     if (!job.client_phone) return "La ficha no tiene teléfono.";
     if (!job.phone_number_id || !job.access_token) {
-      return "La estética todavía no conectó su cuenta de WhatsApp.";
+      return SIN_WHATSAPP;
     }
     if (!job.provider_name) {
       return "El mensaje no tiene el nombre con el que Meta lo aprobó.";

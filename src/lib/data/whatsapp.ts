@@ -29,6 +29,37 @@ export type WhatsappStatus = {
   has_app_secret: boolean;
 };
 
+/**
+ * Si el WhatsApp por QR se cayó mientras los recordatorios salen de verdad:
+ * es el único caso en que hay turnos quedándose sin aviso.
+ *
+ * Que alguna vez haya tenido número distingue «se cayó» de «nunca se
+ * vinculó», que ya lo cubren los primeros pasos. La vista sólo le muestra la
+ * fila a titular y administración, que son quienes pueden volver a escanear;
+ * para el resto esto da siempre falso.
+ */
+export async function getWhatsappCaido(tenantId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const [{ data: sesion }, { data: mensajeria }] = await Promise.all([
+    supabase
+      .from("baileys_sessions_view")
+      .select("status, phone_number")
+      .eq("tenant_id", tenantId)
+      .maybeSingle(),
+    supabase
+      .from("messaging_settings")
+      .select("test_mode")
+      .eq("tenant_id", tenantId)
+      .maybeSingle(),
+  ]);
+
+  return Boolean(
+    sesion?.phone_number &&
+      (sesion.status === "disconnected" || sesion.status === "error") &&
+      mensajeria?.test_mode === false,
+  );
+}
+
 export async function getWhatsappStatus(): Promise<WhatsappStatus | null> {
   const supabase = await createClient();
   const { data } = await supabase

@@ -7,9 +7,9 @@ export const metadata: Metadata = { title: "Entrar" };
 export default async function EntrarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ volver?: string; enlace?: string }>;
+  searchParams: Promise<{ volver?: string; enlace?: string; crear?: string }>;
 }) {
-  const { volver, enlace } = await searchParams;
+  const { volver, enlace, crear } = await searchParams;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-8 px-5 py-12">
@@ -31,6 +31,9 @@ export default async function EntrarPage({
 
       <AuthForm
         volver={volver}
+        // Quien viene de «Crear mi cuenta» tiene que caer en el alta, no en
+        // el ingreso: si no, escribe su correo, toca «Entrar» y le da error.
+        alta={crear !== undefined}
         enlaceVencido={enlace === "vencido"}
         correoConfirmado={enlace === "confirmado"}
       />

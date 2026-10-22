@@ -374,6 +374,7 @@ export type Database = {
           error_message: string | null
           last_connected_at: string | null
           last_message_sent_at: string | null
+          linked_at: string | null
           phone_number: string | null
           qr_code: string | null
           status: string
@@ -385,6 +386,7 @@ export type Database = {
           error_message?: string | null
           last_connected_at?: string | null
           last_message_sent_at?: string | null
+          linked_at?: string | null
           phone_number?: string | null
           qr_code?: string | null
           status?: string
@@ -396,6 +398,7 @@ export type Database = {
           error_message?: string | null
           last_connected_at?: string | null
           last_message_sent_at?: string | null
+          linked_at?: string | null
           phone_number?: string | null
           qr_code?: string | null
           status?: string
@@ -2269,6 +2272,7 @@ export type Database = {
           error_message: string | null
           last_connected_at: string | null
           last_message_sent_at: string | null
+          linked_at: string | null
           phone_number: string | null
           qr_code: string | null
           status: string | null
@@ -2279,6 +2283,7 @@ export type Database = {
           error_message?: string | null
           last_connected_at?: string | null
           last_message_sent_at?: string | null
+          linked_at?: string | null
           phone_number?: string | null
           qr_code?: string | null
           status?: string | null
@@ -2289,6 +2294,7 @@ export type Database = {
           error_message?: string | null
           last_connected_at?: string | null
           last_message_sent_at?: string | null
+          linked_at?: string | null
           phone_number?: string | null
           qr_code?: string | null
           status?: string | null

@@ -235,7 +235,7 @@ export function FormReservas({
               required
               className="w-32"
               defaultValue={settings.cancel_min_hours}
-              hint="Pasado ese plazo se le muestra tu teléfono en vez del botón. Ojo: el recordatorio del día anterior sale 24 horas antes, así que con 24 o más ya no le aparece el botón cuando lo recibe."
+              hint="Pasado ese plazo, en el enlace ya no le aparecen los botones de cancelar ni de cambiar: si no puede venir, te tiene que avisar. Ojo: el recordatorio del día anterior sale 24 horas antes, así que con 24 o más ya no le aparecen cuando lo recibe."
             />
           )}
 

@@ -86,6 +86,7 @@ export class Sessions {
         qr_code: null,
         phone_number: null,
         error_message: null,
+        linked_at: null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "tenant_id" },
@@ -210,6 +211,9 @@ export class Sessions {
       }
 
       if (connection === "open") {
+        // Si todavía no estaba emparejado, esto es el escaneo: queda la fecha.
+        // Las reconexiones posteriores no la tocan.
+        const recienEscaneado = !entry.paired;
         entry.paired = true;
         entry.retries = 0;
         this.qrCount.delete(tenantId);
@@ -219,6 +223,7 @@ export class Sessions {
           error_message: null,
           phone_number: socket.user ? `+${jidDecode(socket.user.id)?.user ?? ""}` : null,
           last_connected_at: new Date().toISOString(),
+          ...(recienEscaneado && { linked_at: new Date().toISOString() }),
         });
       }
 

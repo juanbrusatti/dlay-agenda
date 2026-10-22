@@ -44,14 +44,16 @@ async function enviar(prev: FormState, formData: FormData): Promise<FormState> {
 
 export function AuthForm({
   volver,
+  alta = false,
   enlaceVencido,
   correoConfirmado,
 }: {
   volver?: string;
+  alta?: boolean;
   enlaceVencido?: boolean;
   correoConfirmado?: boolean;
 }) {
-  const [mode, setMode] = useState<Modo>("in");
+  const [mode, setMode] = useState<Modo>(alta ? "up" : "in");
   const isSignUp = mode === "up";
   const isReset = mode === "reset";
 

@@ -81,7 +81,7 @@ export function Portada() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
-              <Link href="/entrar">Crear mi cuenta</Link>
+              <Link href="/entrar?crear">Crear mi cuenta</Link>
             </Button>
             <span className="text-[13.5px] text-faint">
               El primer mes es gratis. No pedimos tarjeta.
@@ -99,7 +99,7 @@ export function Portada() {
         {/* ── Para tocar ────────────────────────────────────────────── */}
         <Seccion
           titulo="Ahora probalo vos."
-          bajada="Sos el cliente: tocá un botón del recordatorio y mirá cómo cambia la agenda."
+          bajada="Sos el cliente: tocá el enlace del recordatorio y mirá cómo cambia la agenda."
         >
           <DemoRecordatorio />
         </Seccion>
@@ -201,7 +201,7 @@ export function Portada() {
               size="lg"
               className="bg-surface text-ink hover:opacity-90"
             >
-              <Link href="/entrar">Empezar ahora</Link>
+              <Link href="/entrar?crear">Empezar ahora</Link>
             </Button>
           </div>
         </section>

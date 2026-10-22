@@ -43,18 +43,28 @@ export async function Barra({ tenantName }: { tenantName: string }) {
           aria-label="Secciones"
           className="ml-auto flex items-center gap-1 overflow-x-auto"
         >
-          <NavLink href="/">Inicio</NavLink>
-          <NavLink href="/agenda">Agenda</NavLink>
-          <NavLink href="/clientes">Clientes</NavLink>
-          {veLaPlata && <NavLink href="/caja">Caja</NavLink>}
-          {veElNegocio && <NavLink href="/informes">Informes</NavLink>}
-          <NavLink href="/servicios">Servicios</NavLink>
+          <NavLink href="/" guia="inicio">Inicio</NavLink>
+          <NavLink href="/agenda" guia="agenda">Agenda</NavLink>
+          <NavLink href="/clientes" guia="clientes">Clientes</NavLink>
+          {veLaPlata && <NavLink href="/caja" guia="caja">Caja</NavLink>}
+          {veElNegocio && <NavLink href="/informes" guia="informes">Informes</NavLink>}
+          <NavLink href="/servicios" guia="servicios">Servicios</NavLink>
           {membership && META_VISIBLE && (
             <AvisoMensajes tenantId={membership.tenant.id} sinVer={sinVer} />
           )}
-          <NavLink href="/recordatorios">Avisos</NavLink>
-          <NavLink href="/configuracion">Ajustes</NavLink>
+          <NavLink href="/recordatorios" guia="avisos">Avisos</NavLink>
+          <NavLink href="/configuracion" guia="ajustes">Ajustes</NavLink>
         </nav>
+
+        <Link
+          href="/ayuda"
+          data-guia="ayuda"
+          aria-label="Ayuda"
+          title="Ayuda"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[1.5px] border-line text-[14px] font-semibold text-muted hover:border-accent hover:text-ink"
+        >
+          ?
+        </Link>
 
         <form action={signOut} className="shrink-0">
           <Button type="submit" variant="ghost" size="sm">

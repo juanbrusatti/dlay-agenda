@@ -50,7 +50,13 @@ const SECCIONES = [
     href: "/configuracion/equipo",
     titulo: "Tu equipo",
     detalle:
-      "Quiénes más entran al sistema y qué puede ver cada una.",
+      "Quiénes más entran al sistema y qué puede ver cada persona.",
+  },
+  {
+    href: "/ayuda",
+    titulo: "Ayuda",
+    detalle:
+      "La guía completa de Dlay, con buscador, y el recorrido de bienvenida para verlo de nuevo.",
   },
   {
     href: "/configuracion/cuenta",

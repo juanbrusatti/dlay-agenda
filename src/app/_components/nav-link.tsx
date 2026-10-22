@@ -7,9 +7,12 @@ import type { ReactNode } from "react";
 export function NavLink({
   href,
   children,
+  guia,
 }: {
   href: string;
   children: ReactNode;
+  /** Ancla para el recorrido de bienvenida. */
+  guia?: string;
 }) {
   const pathname = usePathname();
   const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -18,6 +21,7 @@ export function NavLink({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
+      data-guia={guia}
       className={`whitespace-nowrap rounded-pill px-3.5 py-1.5 text-[13.5px] font-medium ${
         active
           ? "bg-accent text-on-accent"

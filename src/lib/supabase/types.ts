@@ -630,6 +630,9 @@ export type Database = {
           contact_phone: string | null
           created_at: string
           enabled: boolean
+          link_cancel: boolean
+          link_confirm: boolean
+          link_reschedule: boolean
           max_days_ahead: number
           max_new_clients_per_hour: number
           max_open_per_client: number
@@ -648,6 +651,9 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           enabled?: boolean
+          link_cancel?: boolean
+          link_confirm?: boolean
+          link_reschedule?: boolean
           max_days_ahead?: number
           max_new_clients_per_hour?: number
           max_open_per_client?: number
@@ -666,6 +672,9 @@ export type Database = {
           contact_phone?: string | null
           created_at?: string
           enabled?: boolean
+          link_cancel?: boolean
+          link_confirm?: boolean
+          link_reschedule?: boolean
           max_days_ahead?: number
           max_new_clients_per_hour?: number
           max_open_per_client?: number

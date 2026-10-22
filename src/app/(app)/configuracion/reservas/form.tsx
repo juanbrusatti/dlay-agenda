@@ -29,6 +29,14 @@ export function FormReservas({
    * lo ve volver atrás y concluye —con razón— que está roto.
    */
   const [abierta, setAbierta] = useState(settings.enabled);
+
+  // Antes había un solo interruptor para todo el enlace; un negocio que lo
+  // tenía apagado arranca con los tres botones apagados.
+  const [botones, setBotones] = useState({
+    linkConfirm: settings.self_manage && settings.link_confirm,
+    linkCancel: settings.self_manage && settings.link_cancel,
+    linkReschedule: settings.self_manage && settings.link_reschedule,
+  });
   const sinGuardar = abierta !== settings.enabled;
 
   return (
@@ -173,42 +181,78 @@ export function FormReservas({
 
           <p className="-mt-2 max-w-prose text-[13.5px] leading-relaxed text-muted">
             Cada turno tiene su propio enlace, que viaja en los recordatorios.
-            Desde ahí tu cliente puede confirmar, mover el horario o avisar que
-            no viene, sin que vos tengas que contestar ni cancelar a mano.
+            Elegí qué puede hacer tu cliente desde ahí, sin que vos tengas que
+            contestar ni cambiar nada a mano.
           </p>
 
-          <Toggle
-            name="selfManage"
-            label="Dejar que cambien su turno desde el enlace"
-            hint="No depende de tener la agenda abierta al público: son dos cosas distintas. Si lo apagás, el enlace sigue mostrando el turno pero sin botones."
-            defaultChecked={settings.self_manage}
-          />
+          <fieldset className="grid gap-2">
+            <legend className="mb-2 text-[13.5px] font-medium text-ink">
+              Qué botones ve en el enlace
+            </legend>
+            {(
+              [
+                ["linkConfirm", "Confirmar que voy", "Marca el turno como confirmado en tu agenda."],
+                ["linkReschedule", "Cambiar el día o el horario", "Elige otro horario libre y el turno se mueve solo."],
+                ["linkCancel", "No voy a poder ir", "Cancela el turno y el horario queda libre para otra persona."],
+              ] as const
+            ).map(([name, titulo, detalle]) => (
+              <label
+                key={name}
+                className={`flex cursor-pointer items-start gap-3 rounded-[16px] border-[1.5px] px-3.5 py-3 ${
+                  botones[name] ? "border-accent bg-accent-wash" : "border-line bg-surface"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  name={name}
+                  checked={botones[name]}
+                  onChange={(e) => setBotones((b) => ({ ...b, [name]: e.target.checked }))}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-accent)]"
+                />
+                <span>
+                  <span className="block text-[14.5px] font-medium">{titulo}</span>
+                  <span className="block text-[12.5px] leading-snug text-muted">{detalle}</span>
+                </span>
+              </label>
+            ))}
+            <p className="text-[12.5px] leading-snug text-muted">
+              {!botones.linkConfirm && !botones.linkCancel && !botones.linkReschedule
+                ? "Sin ninguno, el enlace muestra el turno y tu teléfono para que te escriban."
+                : !botones.linkCancel
+                  ? "Si no puede ir, el enlace le muestra tu teléfono para que te avise."
+                  : "Los cambios que haga aparecen solos en tu agenda."}
+            </p>
+          </fieldset>
 
-          <Field
-            label="Hasta cuántas horas antes"
-            name="cancelMinHours"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={168}
-            required
-            className="w-32"
-            defaultValue={settings.cancel_min_hours}
-            hint="Pasado ese plazo se le muestra tu teléfono en vez del botón. Cancelar dos horas antes deja un hueco que no se llena."
-          />
+          {(botones.linkCancel || botones.linkReschedule) && (
+            <Field
+              label="Hasta cuántas horas antes puede cancelar o cambiar"
+              name="cancelMinHours"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={168}
+              required
+              className="w-32"
+              defaultValue={settings.cancel_min_hours}
+              hint="Pasado ese plazo se le muestra tu teléfono en vez del botón. Ojo: el recordatorio del día anterior sale 24 horas antes, así que con 24 o más ya no le aparece el botón cuando lo recibe."
+            />
+          )}
 
-          <Field
-            label="Cuántas veces puede mover el mismo turno"
-            name="maxReschedules"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={10}
-            required
-            className="w-32"
-            defaultValue={settings.max_reschedules}
-            hint="Sin tope, un mismo turno se pasea por la agenda toda la semana."
-          />
+          {botones.linkReschedule && (
+            <Field
+              label="Cuántas veces puede mover el mismo turno"
+              name="maxReschedules"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={10}
+              required
+              className="w-32"
+              defaultValue={Math.max(settings.max_reschedules, 1)}
+              hint="Sin tope, un mismo turno se pasea por la agenda toda la semana."
+            />
+          )}
 
           <Field
             label="Teléfono de contacto"

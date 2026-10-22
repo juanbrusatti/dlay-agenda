@@ -168,9 +168,11 @@ const reservaSchema = z.object({
   maxNewClientsPerHour: z.number().int().min(1).max(200),
   welcomeText: z.string().trim().max(400).optional(),
   addressNote: z.string().trim().max(200).optional(),
-  selfManage: z.boolean(),
-  cancelMinHours: z.number().int().min(0).max(168),
-  maxReschedules: z.number().int().min(0).max(10),
+  linkConfirm: z.boolean(),
+  linkCancel: z.boolean(),
+  linkReschedule: z.boolean(),
+  cancelMinHours: z.number().int().min(0).max(168).optional(),
+  maxReschedules: z.number().int().min(0).max(10).optional(),
   contactPhone: z.string().trim().max(30).optional(),
 });
 
@@ -190,9 +192,16 @@ export async function saveReservas(
     ),
     welcomeText: String(formData.get("welcomeText") ?? "").trim() || undefined,
     addressNote: String(formData.get("addressNote") ?? "").trim() || undefined,
-    selfManage: formData.get("selfManage") === "on",
-    cancelMinHours: Number(formData.get("cancelMinHours") ?? 24),
-    maxReschedules: Number(formData.get("maxReschedules") ?? 2),
+    linkConfirm: formData.get("linkConfirm") === "on",
+    linkCancel: formData.get("linkCancel") === "on",
+    linkReschedule: formData.get("linkReschedule") === "on",
+    // Si el campo no se mostró (sin cancelar ni mover), se conserva lo que había.
+    cancelMinHours: formData.has("cancelMinHours")
+      ? Number(formData.get("cancelMinHours"))
+      : undefined,
+    maxReschedules: formData.has("maxReschedules")
+      ? Number(formData.get("maxReschedules"))
+      : undefined,
     contactPhone: String(formData.get("contactPhone") ?? "").trim() || undefined,
   });
 
@@ -216,9 +225,18 @@ export async function saveReservas(
       max_new_clients_per_hour: parsed.data.maxNewClientsPerHour,
       welcome_text: parsed.data.welcomeText ?? null,
       address_note: parsed.data.addressNote ?? null,
-      self_manage: parsed.data.selfManage,
-      cancel_min_hours: parsed.data.cancelMinHours,
-      max_reschedules: parsed.data.maxReschedules,
+      // El enlace sirve mientras ofrezca algún botón.
+      self_manage:
+        parsed.data.linkConfirm || parsed.data.linkCancel || parsed.data.linkReschedule,
+      link_confirm: parsed.data.linkConfirm,
+      link_cancel: parsed.data.linkCancel,
+      link_reschedule: parsed.data.linkReschedule,
+      ...(parsed.data.cancelMinHours !== undefined && {
+        cancel_min_hours: parsed.data.cancelMinHours,
+      }),
+      ...(parsed.data.maxReschedules !== undefined && {
+        max_reschedules: parsed.data.maxReschedules,
+      }),
       contact_phone: parsed.data.contactPhone
         ? (normalizePhone(parsed.data.contactPhone).e164 ??
           parsed.data.contactPhone)

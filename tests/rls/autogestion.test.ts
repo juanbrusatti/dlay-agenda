@@ -542,3 +542,96 @@ describe("el enlace viaja en los mensajes", () => {
     });
   });
 });
+
+describe("los botones que elige el negocio", () => {
+  async function ajustar(confirmar: boolean, cancelar: boolean, mover: boolean) {
+    await asAdmin(async (c) => {
+      await c.query(
+        `update public.booking_settings
+         set link_confirm = $2, link_cancel = $3, link_reschedule = $4
+         where tenant_id = $1`,
+        [s.tenantA, confirmar, cancelar, mover],
+      );
+    });
+  }
+
+  afterAll(async () => {
+    await ajustar(true, true, true);
+  });
+
+  it("sin cambio de horario, el enlace no lo ofrece pero deja cancelar", async () => {
+    await ajustar(true, true, false);
+    const t = await crearTurno(48, "pending");
+
+    await asUser(null, async (c) => {
+      const { rows } = await c.query(`select public.booking_manage($1) as r`, [t.token]);
+      const r = rows[0].r as { can: Record<string, boolean>; why: string | null };
+      expect(r.can).toEqual({ confirm: true, cancel: true, reschedule: false });
+      // No es «ya lo moviste demasiadas veces»: el negocio no lo ofrece.
+      expect(r.why).toBeNull();
+    });
+  });
+
+  it("y la base rechaza moverlo aunque se pida a mano", async () => {
+    await ajustar(true, true, false);
+    const t = await crearTurno(48);
+
+    const r = await comoVisitante((c) =>
+      llamar(c, `select public.booking_reschedule($1, now() + interval '5 days') as r`, [t.token]),
+    );
+    expect(r.ok).toBe(false);
+
+    const slots = await comoVisitante(async (c) => {
+      const { rows } = await c.query(
+        `select count(*)::int n from public.booking_manage_slots($1, (now() + interval '5 days')::date)`,
+        [t.token],
+      );
+      return rows[0].n as number;
+    });
+    expect(slots).toBe(0);
+  });
+
+  it("sin cancelar, la base no cancela aunque se pida a mano", async () => {
+    await ajustar(true, false, true);
+    const t = await crearTurno(48);
+
+    const r = await comoVisitante((c) =>
+      llamar(c, `select public.booking_cancel($1) as r`, [t.token]),
+    );
+    expect(r.ok).toBe(false);
+
+    await asAdmin(async (c) => {
+      const { rows } = await c.query(`select status from public.appointments where id = $1`, [t.id]);
+      expect(rows[0].status).toBe("confirmed");
+    });
+  });
+
+  it("sin confirmar, no hay botón ni se puede confirmar", async () => {
+    await ajustar(false, true, true);
+    const t = await crearTurno(48, "pending");
+
+    const r = await comoVisitante((c) =>
+      llamar(c, `select public.booking_confirm($1) as r`, [t.token]),
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it("con todo apagado, el enlace explica que acá no se hacen cambios", async () => {
+    await ajustar(false, false, false);
+    const t = await crearTurno(48, "pending");
+
+    await asUser(null, async (c) => {
+      const { rows } = await c.query(`select public.booking_manage($1) as r`, [t.token]);
+      const r = rows[0].r as { can: Record<string, boolean>; why: string | null };
+      expect(r.can).toEqual({ confirm: false, cancel: false, reschedule: false });
+      expect(r.why).toBe("cerrado");
+    });
+  });
+
+  it("nadie de afuera puede preguntar los ajustes de otro negocio", async () => {
+    const code = await expectRejected(() =>
+      asUser(null, (c) => c.query(`select * from app.link_permite($1)`, [s.tenantA])),
+    );
+    expect(code).toBe("42501");
+  });
+});

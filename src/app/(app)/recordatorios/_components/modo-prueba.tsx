@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { setTestMode } from "@/lib/actions/recordatorios";
@@ -18,12 +19,16 @@ import { setTestMode } from "@/lib/actions/recordatorios";
 export function ModoPrueba({
   testMode,
   puedeEditar,
+  whatsappConectado,
 }: {
   testMode: boolean;
   puedeEditar: boolean;
+  /** Sin WhatsApp no hay por dónde mandar: no se ofrece salir. */
+  whatsappConectado: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [confirmando, setConfirmando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!testMode) {
     return puedeEditar ? (
@@ -73,8 +78,12 @@ export function ModoPrueba({
                 size="sm"
                 disabled={pending}
                 onClick={() =>
-                  startTransition(() => {
-                    void setTestMode(false);
+                  startTransition(async () => {
+                    const r = await setTestMode(false);
+                    if (r.error) {
+                      setError(r.error);
+                      setConfirmando(false);
+                    }
                   })
                 }
               >
@@ -89,7 +98,7 @@ export function ModoPrueba({
                 Mejor no
               </Button>
             </>
-          ) : (
+          ) : whatsappConectado ? (
             <Button
               variant="outline"
               size="sm"
@@ -97,9 +106,19 @@ export function ModoPrueba({
             >
               Empezar a enviar de verdad
             </Button>
+          ) : (
+            <>
+              <span className="text-[13.5px] font-semibold">
+                Para empezar a enviar, primero conectá tu WhatsApp.
+              </span>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/configuracion/whatsapp">Conectar WhatsApp</Link>
+              </Button>
+            </>
           )}
         </div>
       )}
+      {error && <p className="mt-2 text-[13px] font-semibold">{error}</p>}
     </div>
   );
 }

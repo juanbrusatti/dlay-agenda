@@ -11,10 +11,9 @@ import { Button } from "@/components/ui/button";
  * recordatorio sale, se pone del lado del cliente y ve la agenda cambiar.
  *
  * Todo lo que aparece es copia de lo que pasa adentro: el texto es el de la
- * plantilla de fábrica, los tres botones son los que aprueba Meta, las
- * respuestas son las que manda el webhook palabra por palabra, y la agenda usa
- * las mismas etiquetas y colores que la de verdad. Una demostración que miente
- * es peor que no tener ninguna.
+ * plantilla de fábrica, el enlace abre lo mismo que abre `/t/<token>` con los
+ * mismos tres botones, y la agenda usa las mismas etiquetas y colores que la de
+ * verdad. Una demostración que miente es peor que no tener ninguna.
  */
 
 const NEGOCIO = "Estudio Malva";
@@ -22,6 +21,7 @@ const NEGOCIO = "Estudio Malva";
 type Fase =
   | "antes"
   | "enviado"
+  | "abierto"
   | "confirmado"
   | "cancelado"
   | "enlace"
@@ -51,13 +51,15 @@ const RELATO: Record<Fase, string> = {
   antes:
     "Mañana vienen cuatro. Nadie sabe todavía quién se acuerda.",
   enviado:
-    "Salió solo, a todos los de mañana. Ahora sos Sofía: tocá un botón.",
+    "Salió solo, a todos los de mañana. Ahora sos Sofía: tocá el enlace.",
+  abierto:
+    "Es su turno, con los botones que vos elegiste mostrar. Tocá uno.",
   confirmado:
     "Sofía confirmó y la agenda ya lo sabe. No tocaste nada.",
   cancelado:
     "Sofía no puede venir. Las 15:00 quedaron libres con un día de margen para dárselas a otra persona.",
   enlace:
-    "Le llegó su enlace. Tocalo y elegí otro horario, como haría Sofía.",
+    "Elegí otro horario libre, como haría Sofía.",
   movido:
     "Sofía se movió sola a otro horario. Nadie tuvo que llamar a nadie.",
 };
@@ -207,11 +209,11 @@ export function DemoRecordatorio() {
     const timers = [
       setTimeout(() => {
         cambiar("carla", { estado: "confirmed" });
-        setAviso("Carla Benítez confirmó desde WhatsApp");
+        setAviso("Carla Benítez confirmó desde su enlace");
       }, 2600),
       setTimeout(() => {
         cambiar("mica", { estado: "confirmed" });
-        setAviso("Mica Sosa confirmó desde WhatsApp");
+        setAviso("Mica Sosa confirmó desde su enlace");
       }, 6200),
     ];
     return () => timers.forEach(clearTimeout);
@@ -227,11 +229,11 @@ export function DemoRecordatorio() {
   function responder(accion: "confirmar" | "cancelar" | "reprogramar") {
     if (accion === "confirmar") {
       cambiar("sofia", { estado: "confirmed" });
-      setAviso("Sofía Ramírez confirmó desde WhatsApp");
+      setAviso("Sofía Ramírez confirmó desde su enlace");
       setFase("confirmado");
     } else if (accion === "cancelar") {
       cambiar("sofia", { estado: "cancelled" });
-      setAviso("Sofía Ramírez canceló desde WhatsApp");
+      setAviso("Sofía Ramírez canceló desde su enlace");
       setFase("cancelado");
     } else {
       setFase("enlace");
@@ -261,12 +263,6 @@ export function DemoRecordatorio() {
   }
 
   const pendientes = turnos.filter((t) => t.estado === "pending").length;
-  const respuestaSofia: Record<string, string> = {
-    confirmado: "Confirmar turno",
-    cancelado: "Cancelar turno",
-    enlace: "Cambiar horario",
-    movido: "Cambiar horario",
-  };
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr] lg:items-start">
@@ -326,6 +322,7 @@ export function DemoRecordatorio() {
           </div>
         ) : (
           fase !== "enviado" &&
+          fase !== "abierto" &&
           fase !== "enlace" && (
             <button
               type="button"
@@ -353,7 +350,7 @@ export function DemoRecordatorio() {
                 {NEGOCIO}
               </span>
               <span className="block text-[11px] text-faint">
-                Cuenta de empresa
+                Desde el número de siempre
               </span>
             </span>
           </div>
@@ -369,54 +366,70 @@ export function DemoRecordatorio() {
                   <Burbuja hora="10:00">
                     Hola Sofía! Te escribimos de {NEGOCIO} para recordarte tu
                     turno de mañana jueves 12 de marzo a las 15:00, para
-                    limpieza facial. Vení con la cara lavada y sin maquillaje.
-                    Con los botones de acá abajo podés confirmar el turno o
-                    avisarnos que no vas a venir. ¡Te esperamos!
+                    limpieza facial.
+                    <span className="mt-2 block">
+                      Vení con la cara lavada y sin maquillaje.
+                    </span>
+                    <span className="mt-2 block">
+                      Para confirmar el turno o avisarnos que no vas a venir:{" "}
+                      <button
+                        type="button"
+                        disabled={fase !== "enviado"}
+                        onClick={() => setFase("abierto")}
+                        className="whitespace-nowrap text-accent-text underline enabled:hover:opacity-80 disabled:cursor-default"
+                      >
+                        dlay-agenda.vercel.app/t/k3f9q2
+                      </button>
+                    </span>
+                    <span className="mt-2 block">¡Te esperamos!</span>
                   </Burbuja>
-                  <div className="mt-1 grid gap-1">
+                </div>
+
+                {/* Lo que abre el enlace, en chiquito: la misma página del turno */}
+                {fase === "abierto" && (
+                  <div className="grid gap-2 rounded-[14px] border-[1.5px] border-accent bg-surface p-3">
+                    <p className="text-[12px] text-muted">
+                      Hola Sofía, este es tu turno en {NEGOCIO}
+                    </p>
+                    <p className="text-[13.5px] font-semibold">
+                      Jueves 12 · 15:00 · Limpieza facial
+                    </p>
                     {(
                       [
-                        ["Confirmar turno", "confirmar"],
-                        ["Cancelar turno", "cancelar"],
-                        ["Cambiar horario", "reprogramar"],
+                        ["Confirmar que voy", "confirmar"],
+                        ["Cambiar el día o el horario", "reprogramar"],
+                        ["No voy a poder ir", "cancelar"],
                       ] as const
-                    ).map(([texto, accion]) => (
+                    ).map(([texto, accion], i) => (
                       <button
                         key={accion}
                         type="button"
-                        disabled={fase !== "enviado"}
                         onClick={() => responder(accion)}
-                        className="rounded-[12px] bg-surface py-2 text-[13px] font-medium text-accent-text transition-colors enabled:hover:bg-accent-wash disabled:text-faint"
+                        className={`rounded-pill py-2 text-[13px] font-medium ${
+                          i === 0
+                            ? "bg-accent text-on-accent hover:opacity-90"
+                            : "border-[1.5px] border-line bg-surface text-ink hover:bg-surface-2"
+                        }`}
                       >
                         {texto}
                       </button>
                     ))}
                   </div>
-                </div>
-
-                {fase !== "enviado" && (
-                  <Burbuja propia hora="10:04">
-                    {respuestaSofia[fase]}
-                  </Burbuja>
                 )}
 
                 {fase === "confirmado" && (
-                  <Burbuja hora="10:04">
-                    ¡Gracias! Quedó confirmado. Te esperamos.
-                  </Burbuja>
+                  <div className="rounded-[14px] bg-surface p-3 text-[12.5px] leading-relaxed">
+                    <p className="text-[13.5px] font-semibold">¡Listo, te esperamos!</p>
+                    <p className="text-muted">Tu turno quedó confirmado.</p>
+                  </div>
                 )}
                 {fase === "cancelado" && (
-                  <Burbuja hora="10:04">
-                    Listo, cancelamos tu turno. Cuando quieras sacás otro.
-                  </Burbuja>
-                )}
-                {(fase === "enlace" || fase === "movido") && (
-                  <Burbuja hora="10:04">
-                    Elegí el horario que te quede mejor acá:{" "}
-                    <span className="whitespace-nowrap text-accent-text underline">
-                      dlay-agenda.vercel.app/t/k3f9q2
-                    </span>
-                  </Burbuja>
+                  <div className="rounded-[14px] bg-surface p-3 text-[12.5px] leading-relaxed">
+                    <p className="text-[13.5px] font-semibold">Tu turno se canceló</p>
+                    <p className="text-muted">
+                      Gracias por avisar: el horario ya quedó libre para otra persona.
+                    </p>
+                  </div>
                 )}
 
                 {/* Lo que abre el enlace, en chiquito */}

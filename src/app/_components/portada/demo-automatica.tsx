@@ -325,7 +325,7 @@ const ESCENAS: Escena[] = [
     chat: true,
     hora: "Miércoles 10:00",
     relato:
-      "Un día antes, el recordatorio sale solo por WhatsApp. Sofía confirma con un botón y la agenda se entera sola.",
+      "Un día antes, el recordatorio sale solo por WhatsApp. Sofía toca su enlace, confirma y la agenda se entera sola.",
     dibujar: (t) => (
       <div className="grid gap-2">
         <div className="flex items-center gap-2 border-b-[1.5px] border-line pb-2">
@@ -339,26 +339,35 @@ const ESCENAS: Escena[] = [
             <Burbuja hora="10:00">
               Hola Sofía! Te escribimos de {NEGOCIO} para recordarte tu turno
               de mañana jueves 12 a las 15:00, para limpieza facial. Vení con la
-              cara lavada y sin maquillaje. ¡Te esperamos!
+              cara lavada y sin maquillaje.{" "}
+              <Toque activo={ya(t, 2400) && !ya(t, 2900)}>
+                <span className="text-accent-text underline">
+                  dlay-agenda.vercel.app/t/k3f9q2
+                </span>
+              </Toque>
             </Burbuja>
-            {["Confirmar turno", "Cancelar turno", "Cambiar horario"].map(
-              (b, i) => (
-                <Toque key={b} activo={i === 0 && ya(t, 2600) && !ya(t, 3200)}>
-                  <span className="demo-aparece block rounded-[12px] bg-surface py-1.5 text-center text-[12.5px] font-medium text-accent-text">
+          </div>
+        )}
+        {/* El enlace abre la página del turno, con los botones del negocio. */}
+        {ya(t, 2900) && (
+          <div className="demo-aparece grid gap-1.5 rounded-[14px] border-[1.5px] border-accent bg-surface p-2.5">
+            <p className="text-[12px] font-semibold">Jueves 12 · 15:00 · Limpieza facial</p>
+            {ya(t, 4000) ? (
+              <p className="text-[12.5px] text-ok">¡Listo, te esperamos! Quedó confirmado.</p>
+            ) : (
+              ["Confirmar que voy", "No voy a poder ir"].map((b, i) => (
+                <Toque key={b} activo={i === 0 && ya(t, 3500)}>
+                  <span
+                    className={`block rounded-pill py-1.5 text-center text-[12px] font-medium ${
+                      i === 0 ? "bg-accent text-on-accent" : "border-[1.5px] border-line text-ink"
+                    }`}
+                  >
                     {b}
                   </span>
                 </Toque>
-              ),
+              ))
             )}
           </div>
-        )}
-        {ya(t, 3200) && (
-          <Burbuja propia hora="10:04">
-            Confirmar turno
-          </Burbuja>
-        )}
-        {ya(t, 3900) && (
-          <Burbuja hora="10:04">¡Gracias! Quedó confirmado. Te esperamos.</Burbuja>
         )}
         {ya(t, 5000) && (
           <div className="demo-aparece mt-1 rounded-[14px] border-[1.5px] border-dashed border-line p-2">
@@ -378,76 +387,6 @@ const ESCENAS: Escena[] = [
         )}
       </div>
     ),
-  },
-  {
-    clave: "mensajes",
-    capitulo: "Mensajes",
-    duracion: 7200,
-    pantalla: "sistema",
-    ruta: "dlay-agenda.vercel.app/mensajes",
-    seccion: "Mensajes",
-    hora: "Miércoles 15:52",
-    relato:
-      "Si alguien te escribe, suena y lo ves en Mensajes. Contestás desde ahí, sin agarrar el teléfono del negocio.",
-    dibujar: (t) => {
-      const abierta = ya(t, 2400);
-      return (
-        <div className="grid gap-2.5">
-          {!abierta ? (
-            <>
-              <p className="text-[16px] font-bold tracking-[-0.02em]">Mensajes</p>
-              {ya(t, 800) && (
-                <div className="demo-aparece flex items-center gap-2.5 rounded-[14px] border-[1.5px] border-accent bg-surface px-3 py-2.5">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-semibold">Lu Ferreyra</span>
-                    <span className="block truncate text-[12px] text-muted">
-                      Hola! ¿Puedo llegar 10 minutos más tarde?
-                    </span>
-                  </span>
-                  <span className="grid h-5 min-w-5 place-items-center rounded-pill bg-accent px-1.5 text-[10.5px] font-semibold text-on-accent">
-                    1
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center gap-2.5 rounded-[14px] border-[1.5px] border-line bg-surface px-3 py-2.5 opacity-70">
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-semibold">Carla Benítez</span>
-                  <span className="block truncate text-[12px] text-muted">
-                    Perfecto, gracias!
-                  </span>
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="text-[15px] font-bold tracking-[-0.02em]">Lu Ferreyra</p>
-              <Burbuja hora="15:52">Hola! ¿Puedo llegar 10 minutos más tarde?</Burbuja>
-              {ya(t, 4600) && (
-                <Burbuja propia hora="15:53">
-                  Sí, tranqui. Te esperamos 16:10.
-                </Burbuja>
-              )}
-              <div className="mt-1 flex items-center gap-2 rounded-[14px] border-[1.5px] border-line bg-surface px-3 py-2">
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted">
-                  {ya(t, 4600)
-                    ? "Escribí una respuesta…"
-                    : "Sí, tranqui. Te esperamos 16:10.".slice(
-                        0,
-                        Math.max(0, Math.floor((t - 2900) / 40)),
-                      ) || "Escribí una respuesta…"}
-                </span>
-                <span className="rounded-pill bg-accent px-2.5 py-1 text-[11.5px] font-semibold text-on-accent">
-                  Enviar
-                </span>
-              </div>
-              <p className="text-[11.5px] text-faint">
-                Podés contestarle hasta mañana a las 15:52.
-              </p>
-            </>
-          )}
-        </div>
-      );
-    },
   },
   {
     clave: "ficha",
@@ -677,7 +616,7 @@ const ESCENAS: Escena[] = [
           {formatPrice(ABONO_MENSUAL_CENTS)} por mes. El primero, gratis.
         </p>
         <Link
-          href="/entrar"
+          href="/entrar?crear"
           className="rounded-pill bg-accent px-5 py-2.5 text-[14.5px] font-semibold text-on-accent hover:opacity-90"
         >
           Crear mi cuenta
@@ -687,7 +626,7 @@ const ESCENAS: Escena[] = [
   },
 ];
 
-const SECCIONES = ["Agenda", "Clientes", "Caja", "Informes", "Mensajes", "Ajustes"];
+const SECCIONES = ["Agenda", "Clientes", "Caja", "Informes", "Avisos", "Ajustes"];
 
 // ---------------------------------------------------------------------------
 // El reproductor
@@ -758,11 +697,6 @@ function Marco({ escena, children }: { escena: Escena; children: ReactNode }) {
             }`}
           >
             {s}
-            {s === "Mensajes" && escena.clave === "mensajes" && (
-              <span className="ml-1 rounded-pill bg-danger px-1.5 text-[9.5px] text-surface">
-                1
-              </span>
-            )}
           </span>
         ))}
       </nav>

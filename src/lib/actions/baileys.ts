@@ -20,6 +20,8 @@ export type BaileysSessionState = {
   phoneNumber: string | null;
   qrCode: string | null;
   lastConnectedAt: string | null;
+  /** Cuándo se escaneó el QR; no cambia con las reconexiones. */
+  linkedAt: string | null;
   errorMessage: string | null;
 };
 
@@ -28,6 +30,7 @@ const VACIO: Omit<BaileysSessionState, "error"> = {
   phoneNumber: null,
   qrCode: null,
   lastConnectedAt: null,
+  linkedAt: null,
   errorMessage: null,
 };
 
@@ -124,7 +127,7 @@ export async function getBaileysSessionState(): Promise<BaileysSessionState> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("baileys_sessions_view")
-    .select("status, phone_number, qr_code, last_connected_at, error_message")
+    .select("status, phone_number, qr_code, last_connected_at, linked_at, error_message")
     .eq("tenant_id", membership.tenantId)
     .maybeSingle();
 
@@ -137,6 +140,7 @@ export async function getBaileysSessionState(): Promise<BaileysSessionState> {
     phoneNumber: data.phone_number,
     qrCode: data.qr_code,
     lastConnectedAt: data.last_connected_at,
+    linkedAt: data.linked_at,
     errorMessage: data.error_message,
   };
 }

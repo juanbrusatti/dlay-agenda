@@ -110,11 +110,11 @@ export function BaileysLink() {
               <dt className="opacity-75">Número</dt>
               <dd>{estado.phoneNumber ?? "Conectado"}</dd>
             </div>
-            {estado.lastConnectedAt && (
+            {(estado.linkedAt ?? estado.lastConnectedAt) && (
               <div className="flex justify-between gap-3">
-                <dt className="opacity-75">Conectado desde</dt>
+                <dt className="opacity-75">Vinculado el</dt>
                 <dd>
-                  {new Date(estado.lastConnectedAt).toLocaleString("es-AR", {
+                  {new Date((estado.linkedAt ?? estado.lastConnectedAt)!).toLocaleString("es-AR", {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}

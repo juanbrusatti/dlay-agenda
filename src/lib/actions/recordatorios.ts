@@ -218,17 +218,44 @@ export async function setSendingEnabled(enabled: boolean, reason?: string) {
  * ahí los mensajes llegan a personas reales. Por eso es explícito y se
  * registra quién lo hizo.
  */
-export async function setTestMode(testMode: boolean) {
+export async function setTestMode(
+  testMode: boolean,
+): Promise<{ error: string | null }> {
   const membership = await getCurrentTenant();
-  if (!membership) return;
+  if (!membership) return { error: "No encontramos tu negocio." };
 
   const supabase = await createClient();
+
+  // Salir del modo de prueba sin WhatsApp conectado no manda nada: cada
+  // recordatorio falla y el negocio cree que ya está avisando. Se frena acá
+  // y no sólo en la pantalla.
+  if (!testMode) {
+    const { data: qr } = await supabase
+      .from("baileys_sessions_view")
+      .select("status")
+      .eq("tenant_id", membership.tenantId)
+      .maybeSingle();
+    let conectado = qr?.status === "connected";
+    if (!conectado && META_VISIBLE) {
+      const { data: meta } = await supabase
+        .from("whatsapp_status")
+        .select("has_token")
+        .eq("tenant_id", membership.tenantId)
+        .maybeSingle();
+      conectado = Boolean(meta?.has_token);
+    }
+    if (!conectado) {
+      return { error: "Primero conectá tu WhatsApp en Ajustes → WhatsApp." };
+    }
+  }
+
   await supabase
     .from("messaging_settings")
     .update({ test_mode: testMode })
     .eq("tenant_id", membership.tenantId);
 
   revalidatePath("/recordatorios");
+  return { error: null };
 }
 
 /** Cancela un envío puntual que todavía no salió. */

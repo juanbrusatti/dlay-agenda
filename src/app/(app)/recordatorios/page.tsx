@@ -75,6 +75,9 @@ export default async function RecordatoriosPage() {
         <ModoPrueba
           testMode={settings?.test_mode ?? true}
           puedeEditar={puedeEditar}
+          whatsappConectado={
+            qr.status === "connected" || Boolean(META_VISIBLE && whatsapp?.has_token)
+          }
         />
 
         {/* Sin cuenta conectada, todo lo que caiga en WhatsApp va a fallar.

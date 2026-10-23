@@ -1,0 +1,86 @@
+# Respaldo diario de la base de producción.
+#
+# El plan gratis de Supabase no guarda copias que se puedan bajar, así que
+# las saca GitHub: todas las noches, cifradas con una clave que sólo tiene
+# quien administra Dlay, y guardadas 30 días. Cómo se restaura: docs/respaldos.md.
+#
+# Sólo los datos. La estructura de la base está en supabase/migrations: para
+# restaurar se crea un proyecto, se corre `supabase db push` y se cargan los
+# datos encima. Igual va una copia de la estructura, por las dudas.
+
+name: Respaldo de la base
+
+on:
+  schedule:
+    # 04:00 en Argentina, cuando no hay nadie usando el sistema.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # La base es Postgres 17 y pg_dump tiene que ser igual o más nuevo.
+      - name: Instalar pg_dump 17
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Sacar el respaldo
+        env:
+          # La del «Session pooler»: los servidores de GitHub no llegan a la
+          # conexión directa de Supabase, que es sólo IPv6.
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          set -euo pipefail
+          PG_DUMP=/usr/lib/postgresql/17/bin/pg_dump
+          FECHA=$(date -u +%Y-%m-%d)
+          mkdir respaldo
+
+          # Los datos, como INSERT que no pisan nada: así se pueden cargar en
+          # un proyecto recién migrado, donde ya hay filas de las migraciones.
+          # De auth van las cuentas; las sesiones abiertas y los registros
+          # no hacen falta.
+          "$PG_DUMP" "$DB_URL" \
+            --data-only --inserts --on-conflict-do-nothing --no-owner --no-privileges \
+            --schema=public --schema=auth \
+            --exclude-table=auth.schema_migrations \
+            --exclude-table-data=auth.sessions \
+            --exclude-table-data=auth.refresh_tokens \
+            --exclude-table-data=auth.flow_state \
+            --exclude-table-data=auth.one_time_tokens \
+            --exclude-table-data=auth.audit_log_entries \
+            --exclude-table-data=auth.mfa_challenges \
+            > respaldo/datos.sql
+
+          "$PG_DUMP" "$DB_URL" --schema-only --no-owner --no-privileges \
+            --schema=public --schema=app \
+            > respaldo/estructura.sql
+
+          # Un respaldo vacío o cortado es peor que ninguno: se cree que hay
+          # copia y no la hay. Si no están los negocios, que falle y avise.
+          grep -q "INSERT INTO public.tenants" respaldo/datos.sql
+          grep -q "INSERT INTO auth.users" respaldo/datos.sql
+          ls -lh respaldo
+
+          tar -czf - -C respaldo . \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 \
+                  --passphrase "$CLAVE" -o "dlay-$FECHA.tar.gz.gpg"
+          echo "FECHA=$FECHA" >> "$GITHUB_ENV"
+
+      - name: Guardar el respaldo
+        uses: actions/upload-artifact@v4
+        with:
+          name: dlay-respaldo-${{ env.FECHA }}
+          path: dlay-${{ env.FECHA }}.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

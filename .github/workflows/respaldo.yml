@@ -21,7 +21,9 @@ permissions:
 
 jobs:
   respaldo:
-    runs-on: ubuntu-latest
+    # Fijo y no «latest»: el repositorio de Postgres tarda en publicar sus
+    # paquetes para cada Ubuntu nuevo, y sin pg_dump no hay respaldo.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       # La base es Postgres 17 y pg_dump tiene que ser igual o más nuevo.

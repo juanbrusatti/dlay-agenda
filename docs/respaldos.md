@@ -12,7 +12,7 @@ Argentina.
 - `estructura.sql`: la estructura de `public` y `app`, por las dudas. La
   fuente de verdad de la estructura son las migraciones.
 
-Va todo en un archivo `dlay-AAAA-MM-DD.tar.gz.gpg`, cifrado con AES-256. Se
+Va todo en un archivo `dlay-AAAA-MM-DD-HHMM.tar.gz.gpg`, cifrado con AES-256. Se
 guarda 30 días en GitHub → Actions → la ejecución del día → Artifacts.
 
 **Tiene datos personales de los clientes de cada negocio.** No lo descifres en
@@ -41,7 +41,7 @@ Actions.
 
    ```bash
    mkdir respaldo
-   gpg -d dlay-AAAA-MM-DD.tar.gz.gpg | tar -xzf - -C respaldo
+   gpg -d dlay-AAAA-MM-DD-HHMM.tar.gz.gpg | tar -xzf - -C respaldo
    ```
 
 3. En un proyecto nuevo de Supabase, creá la estructura con las migraciones:

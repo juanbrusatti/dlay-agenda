@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           PG_DUMP=/usr/lib/postgresql/17/bin/pg_dump
-          FECHA=$(date -u +%Y-%m-%d)
+          FECHA=$(date -u +%Y-%m-%d-%H%M)
           mkdir respaldo
 
           # Los datos, como INSERT que no pisan nada: así se pueden cargar en

@@ -38,11 +38,11 @@ export const metadata: Metadata = {
   },
   description:
     "Agenda, clientes y recordatorios automáticos para negocios. Menos tiempo administrando, más tiempo atendiendo.",
-  applicationName: "Dlay",
+  applicationName: "Dlay Agenda",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Dlay",
+    title: "Dlay Agenda",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

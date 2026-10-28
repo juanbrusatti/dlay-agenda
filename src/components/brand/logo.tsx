@@ -10,11 +10,30 @@ import { cn } from "@/lib/cn";
  *
  * El ojo es un agujero en la cabeza y no un punto blanco: así deja ver el
  * fondo, sea el índigo de la teja, el hueso o el negro.
+ *
+ * Cada sistema Dlay lleva su forma recortada en el caparazón, para que en el
+ * teléfono se distingan sin dejar de ser la misma tortuga. El de Agenda es
+ * una hoja de calendario. También es un agujero, por la misma razón que el ojo.
  */
-function Formas({ ojo }: { ojo: boolean }) {
+function Formas({ ojo, calendario }: { ojo: boolean; calendario: boolean }) {
   return (
     <>
-      <path d="M22 52.5V40a35.8 35.8 0 0 1 71.6 0v12.5a1.5 1.5 0 0 1-1.5 1.5H23.5a1.5 1.5 0 0 1-1.5-1.5Z" />
+      {calendario && (
+        // Todas las copias del logo dibujan la misma máscara, así que el id
+        // repetido no hace daño: cualquiera de ellas recorta igual.
+        <mask id="dlay-calendario" maskUnits="userSpaceOnUse" x="0" y="0" width="140" height="90">
+          <rect width="140" height="90" fill="#fff" />
+          <g fill="none" stroke="#000" strokeWidth={4.5}>
+            <rect x="44.5" y="19" width="26.6" height="24" rx="3.5" />
+            <path d="M44.5 27h26.6" />
+            <path d="M51 14.5v7M64.6 14.5v7" strokeLinecap="round" />
+          </g>
+        </mask>
+      )}
+      <path
+        mask={calendario ? "url(#dlay-calendario)" : undefined}
+        d="M22 52.5V40a35.8 35.8 0 0 1 71.6 0v12.5a1.5 1.5 0 0 1-1.5 1.5H23.5a1.5 1.5 0 0 1-1.5-1.5Z"
+      />
       <rect x="11.2" y="60" width="93.4" height="10" rx="5" />
       <rect x="28" y="66" width="14" height="14.3" rx="3" />
       <rect x="74.6" y="66" width="14" height="14.3" rx="3" />
@@ -32,8 +51,9 @@ function Formas({ ojo }: { ojo: boolean }) {
 }
 
 /**
- * La marca en su teja: tortuga blanca sobre índigo, como el ícono de la app.
- * Es la que va en la barra y en las pantallas sueltas.
+ * La marca de Dlay Agenda en su teja: tortuga blanca sobre índigo, con el
+ * calendario en el caparazón, igual que el ícono de la app. Es la que va en
+ * la barra y en las pantallas sueltas.
  *
  * Sin ojo: a los tamaños a los que se ve (de 20 a 44 px) el ojo es ruido, y
  * el sistema de marca lo saca justamente por eso.
@@ -52,7 +72,7 @@ export function Logo({ className, ...props }: React.ComponentProps<"svg">) {
     >
       <rect width="40" height="40" rx="10" fill="#3e3fe0" />
       <g transform="translate(3.3 9.7) scale(0.2456)" fill="#ffffff" color="#ffffff">
-        <Formas ojo={false} />
+        <Formas ojo={false} calendario />
       </g>
     </svg>
   );
@@ -83,8 +103,9 @@ export function Imagotipo({ className }: { className?: string }) {
 }
 
 /**
- * Sólo la tortuga, sin teja: el isotipo. Toma el color del texto, así que
- * se pinta con las clases de siempre (`text-accent`, `text-ink`).
+ * Sólo la tortuga, sin teja: el isotipo de Dlay, el de la empresa, sin el
+ * calendario de Agenda. Toma el color del texto, así que se pinta con las
+ * clases de siempre (`text-accent`, `text-ink`).
  */
 export function Isotipo({ className, ...props }: React.ComponentProps<"svg">) {
   return (
@@ -96,7 +117,7 @@ export function Isotipo({ className, ...props }: React.ComponentProps<"svg">) {
       className={cn("h-6 w-auto text-accent", className)}
       {...props}
     >
-      <Formas ojo />
+      <Formas ojo calendario={false} />
     </svg>
   );
 }

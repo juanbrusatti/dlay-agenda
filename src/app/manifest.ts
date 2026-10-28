@@ -8,7 +8,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Dlay Agenda",
-    short_name: "Dlay",
+    // Es lo que se lee debajo del ícono: con más sistemas Dlay instalados,
+    // «Dlay» solo no dice cuál es.
+    short_name: "Dlay Agenda",
     description:
       "Agenda, clientes y recordatorios automáticos para negocios.",
     start_url: "/",

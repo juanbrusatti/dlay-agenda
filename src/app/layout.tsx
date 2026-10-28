@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Inter } from "next/font/google";
+import { Caveat, Geist, Inter } from "next/font/google";
 import "./globals.css";
 
 /**
@@ -19,6 +19,18 @@ const caveat = Caveat({
   display: "swap",
 });
 
+/**
+ * La de la palabra «dlay» del logotipo, y nada más: el sistema de marca la
+ * pide en ExtraBold apretada. Sin precarga, porque sólo aparece en la portada.
+ */
+const geist = Geist({
+  subsets: ["latin"],
+  weight: ["800"],
+  variable: "--font-geist",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: {
     default: "Dlay Agenda",
@@ -26,11 +38,11 @@ export const metadata: Metadata = {
   },
   description:
     "Agenda, clientes y recordatorios automáticos para negocios. Menos tiempo administrando, más tiempo atendiendo.",
-  applicationName: "Dlay",
+  applicationName: "Dlay Agenda",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Dlay",
+    title: "Dlay Agenda",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
@@ -52,7 +64,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es-AR" suppressHydrationWarning>
-      <body className={`${inter.variable} ${caveat.variable} antialiased`}>
+      <body className={`${inter.variable} ${caveat.variable} ${geist.variable} antialiased`}>
         {/*
           El navegador avisa una sola vez que la aplicación se puede instalar, y
           lo hace apenas termina de cargar la página: muchas veces antes de que

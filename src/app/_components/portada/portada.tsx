@@ -5,7 +5,7 @@ import {
   COSTO_MENSAJE_META_CENTS,
   DIAS_PARA_PAGAR,
 } from "@/lib/precio";
-import { Logo } from "@/components/brand/logo";
+import { Imagotipo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { DemoAutomatica } from "./demo-automatica";
 import { DemoRecordatorio } from "./demo-recordatorio";
@@ -55,12 +55,7 @@ export function Portada() {
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
-        <span className="flex items-center gap-2.5">
-          <Logo className="h-8 w-8" />
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">
-            Dlay
-          </span>
-        </span>
+        <Imagotipo className="text-[26px]" />
         <Button asChild variant="outline" size="sm">
           <Link href="/entrar">Entrar</Link>
         </Button>

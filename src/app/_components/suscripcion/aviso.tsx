@@ -50,10 +50,10 @@ export function AvisoSuscripcion({ s }: { s: Suscripcion }) {
   }
 
   return (
-    <div className="mx-auto mt-3 w-full max-w-4xl px-4">
+    <div className="mx-auto mt-2 w-full max-w-4xl px-4 sm:mt-3">
       <div
         role={urgente ? "alert" : "status"}
-        className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border-[1.5px] px-4 py-3 text-[13.5px] leading-relaxed ${
+        className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card border-[1.5px] px-3.5 py-2.5 text-[13px] leading-snug sm:px-4 sm:py-3 sm:text-[13.5px] sm:leading-relaxed ${
           urgente
             ? "border-warn bg-warn-wash text-ink"
             : "border-line bg-surface text-muted"

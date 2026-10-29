@@ -57,12 +57,15 @@ export function ListaTurnos({
       ))}
 
       {[...porHora.entries()].map(([hora, turnos]) => (
-        <section key={hora} className="grid grid-cols-[52px_minmax(0,1fr)] gap-3">
+        <section key={hora} className="grid grid-cols-[44px_minmax(0,1fr)] gap-2.5 sm:grid-cols-[52px_minmax(0,1fr)] sm:gap-3">
           <p className="pt-3.5 text-[14px] font-semibold tabular-nums text-muted">
             {hora}
           </p>
 
-          <ul className="grid gap-2">
+          {/* Una sola columna que puede achicarse: sin esto la columna mide
+              lo que el nombre más largo, y en el teléfono la tarjeta se sale
+              de la pantalla en vez de cortar el texto. */}
+          <ul className="grid min-w-0 grid-cols-1 gap-2">
             {turnos.map((a) => {
               const cliente = a.client;
               const nombre = cliente
@@ -76,11 +79,11 @@ export function ListaTurnos({
                 <li key={a.id}>
                   <Link
                     href={`/agenda/${a.id}`}
-                    className={`flex items-center gap-3 rounded-card border-[1.5px] border-line bg-surface px-4 py-3 hover:border-accent ${
+                    className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card border-[1.5px] border-line bg-surface px-4 py-3 hover:border-accent ${
                       cancelado ? "opacity-55" : ""
                     }`}
                   >
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 basis-48">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <p className="truncate text-[15px] font-semibold">
                           {nombre}
@@ -106,7 +109,9 @@ export function ListaTurnos({
                       </p>
                     </div>
 
-                    <div className="grid shrink-0 justify-items-end gap-1">
+                    {/* Si no entra al lado del nombre, baja abajo en un renglón: en el
+                        teléfono el nombre necesita el ancho más que el precio. */}
+                    <div className="flex shrink-0 items-center gap-2 sm:grid sm:justify-items-end sm:gap-1">
                       <div className="flex items-center gap-1">
                         {a.moved_count > 0 && (
                           <span

@@ -44,7 +44,7 @@ export function FormMensajeria({
               step={900}
               defaultValue={quietStart}
               aria-label="Desde"
-              className="h-11 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px]"
+              className="h-11 flex-1 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px] sm:max-w-44"
             />
             <span className="text-[13.5px] text-muted">a</span>
             <input
@@ -53,7 +53,7 @@ export function FormMensajeria({
               step={900}
               defaultValue={quietEnd}
               aria-label="Hasta"
-              className="h-11 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px]"
+              className="h-11 flex-1 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px] sm:max-w-44"
             />
           </div>
         </CardBody>

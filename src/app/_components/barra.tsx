@@ -27,21 +27,24 @@ export async function Barra({ tenantName }: { tenantName: string }) {
 
   return (
     <header className="sticky top-3 z-20 mx-auto w-full max-w-4xl px-4">
-      <div className="flex items-center gap-2 rounded-pill border-[1.5px] border-line bg-surface px-3 py-2 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.25)]">
+      {/* En el teléfono y la tablet son dos renglones: arriba el negocio, la ayuda y
+          salir; abajo las secciones, de borde a borde y deslizables. En una
+          sola fila no entraban y el logo terminaba encima de «Inicio». */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-[22px] border-[1.5px] border-line bg-surface px-3 py-2 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.25)] lg:flex-nowrap lg:rounded-pill">
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-2.5"
+          className="flex min-w-0 flex-1 items-center gap-2.5 lg:flex-initial"
           aria-label={`${tenantName}, ir al inicio`}
         >
           <Logo className="h-8 w-8 shrink-0" />
-          <span className="hidden truncate text-[14.5px] font-semibold sm:block">
+          <span className="truncate text-[14.5px] font-semibold">
             {tenantName}
           </span>
         </Link>
 
         <nav
           aria-label="Secciones"
-          className="ml-auto flex items-center gap-1 overflow-x-auto"
+          className="relative order-last -mx-1 flex w-full basis-full items-center gap-1 overflow-x-auto [scrollbar-width:none] lg:order-none lg:mx-0 lg:ml-auto lg:w-auto lg:shrink-0 lg:basis-auto [&::-webkit-scrollbar]:hidden"
         >
           <NavLink href="/" guia="inicio">Inicio</NavLink>
           <NavLink href="/agenda" guia="agenda">Agenda</NavLink>

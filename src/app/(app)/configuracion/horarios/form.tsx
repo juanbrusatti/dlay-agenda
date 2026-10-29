@@ -83,7 +83,7 @@ export function FormHorarios({ franjas }: { franjas: Franja[] }) {
                   <p className="text-[13px] text-faint">Cerrado</p>
                 ) : (
                   suyas.map((f) => (
-                    <div key={f.index} className="flex items-center gap-2">
+                    <div key={f.index} className="flex items-center gap-1.5 sm:gap-2">
                       <input
                         type="time"
                         step={900}
@@ -92,7 +92,7 @@ export function FormHorarios({ franjas }: { franjas: Franja[] }) {
                         onChange={(e) =>
                           cambiar(f.index, "opens", e.target.value)
                         }
-                        className="h-10 rounded-[12px] border-[1.5px] border-line bg-surface px-2.5 text-[14px]"
+                        className="h-10 flex-1 rounded-[12px] border-[1.5px] border-line bg-surface px-2 text-[13.5px] sm:max-w-40 sm:px-2.5 sm:text-[14px]"
                       />
                       <span className="text-[13px] text-muted">a</span>
                       <input
@@ -103,13 +103,13 @@ export function FormHorarios({ franjas }: { franjas: Franja[] }) {
                         onChange={(e) =>
                           cambiar(f.index, "closes", e.target.value)
                         }
-                        className="h-10 rounded-[12px] border-[1.5px] border-line bg-surface px-2.5 text-[14px]"
+                        className="h-10 flex-1 rounded-[12px] border-[1.5px] border-line bg-surface px-2 text-[13.5px] sm:max-w-40 sm:px-2.5 sm:text-[14px]"
                       />
                       <button
                         type="button"
                         onClick={() => quitar(f.index)}
                         aria-label={`Quitar franja de ${dia.label}`}
-                        className="ml-auto grid h-8 w-8 place-items-center rounded-full border-[1.5px] border-line text-[13px] text-muted hover:text-danger"
+                        className="ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-full border-[1.5px] border-line text-[13px] text-muted hover:text-danger"
                       >
                         ×
                       </button>

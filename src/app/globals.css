@@ -149,6 +149,21 @@
       env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
+  /* Lo de adentro de una grilla puede achicarse. Sin esto, una columna mide
+     lo que el texto más largo que hay adentro, aunque ese texto esté cortado
+     con «…», y en el teléfono la tarjeta entera se sale de la pantalla. */
+  .grid > * {
+    min-width: 0;
+  }
+
+  /* Lo mismo con los campos en una fila: el navegador les da un ancho mínimo
+     de unas veinte letras, y en el teléfono empujaban a lo que tenían al lado. */
+  input,
+  select,
+  textarea {
+    min-width: 0;
+  }
+
   :focus-visible {
     outline: 2.5px solid var(--accent);
     outline-offset: 3px;

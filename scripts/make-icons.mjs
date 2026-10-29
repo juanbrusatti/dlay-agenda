@@ -54,8 +54,6 @@ const teja = ({ ancho, radio, ojo, glifo }) => {
 </svg>`;
 };
 
-await mkdir("public/icons", { recursive: true });
-
 // Normal: la teja con esquinas redondeadas, como se ve en el sistema de marca.
 const normal = teja({ ancho: 0.7, radio: 112, ojo: true, glifo: true });
 // Maskable: el sistema la recorta a su forma y puede comerse hasta un 20% de
@@ -68,18 +66,25 @@ const apple = teja({ ancho: 0.66, radio: 0, ojo: true, glifo: true });
 // con la tortuga.
 const favicon = teja({ ancho: 0.74, radio: 112, ojo: false, glifo: false });
 
-await sharp(Buffer.from(normal)).resize(512, 512).png().toFile("public/icons/icon-512.png");
-await sharp(Buffer.from(normal)).resize(192, 192).png().toFile("public/icons/icon-192.png");
-await sharp(Buffer.from(maskable)).resize(512, 512).png().toFile("public/icons/maskable-512.png");
+// Cada versión de la marca va en su propia carpeta. Los navegadores y los
+// teléfonos guardan los íconos por dirección y los siguen mostrando aunque el
+// archivo cambie; con una dirección nueva no les queda otra que bajarlos. Si
+// cambia la marca: subí MARCA, regenerá y actualizá las rutas en
+// src/lib/marca.ts.
+const MARCA = "public/marca/v2";
+await mkdir(MARCA, { recursive: true });
+
+await sharp(Buffer.from(normal)).resize(512, 512).png().toFile(`${MARCA}/icon-512.png`);
+await sharp(Buffer.from(normal)).resize(192, 192).png().toFile(`${MARCA}/icon-192.png`);
+await sharp(Buffer.from(maskable)).resize(512, 512).png().toFile(`${MARCA}/maskable-512.png`);
+await writeFile(`${MARCA}/favicon.svg`, favicon);
+await sharp(Buffer.from(favicon)).resize(32, 32).png().toFile(`${MARCA}/favicon-32.png`);
 // El de iPhone va sin transparencia y también en la raíz: Safari, además del
 // <link>, prueba /apple-touch-icon.png y /apple-touch-icon-precomposed.png, y
 // si alguno falla puede quedarse con una letra sobre fondo gris.
 const iphone = sharp(Buffer.from(apple)).resize(180, 180).flatten({ background: INDIGO }).png();
-await iphone.clone().toFile("public/icons/apple-touch-icon.png");
+await iphone.clone().toFile(`${MARCA}/apple-touch-icon.png`);
 await iphone.clone().toFile("public/apple-touch-icon.png");
 await iphone.clone().toFile("public/apple-touch-icon-precomposed.png");
-await iphone.clone().toFile("src/app/apple-icon.png");
-await writeFile("public/icons/icon.svg", normal);
-await writeFile("src/app/icon.svg", favicon);
 
-console.log("Iconos generados en public/icons/ y src/app/");
+console.log(`Iconos generados en ${MARCA}/`);

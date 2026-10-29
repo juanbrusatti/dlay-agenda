@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Inter } from "next/font/google";
+import { ICONOS } from "@/lib/marca";
 import "./globals.css";
 
 /**
@@ -40,6 +41,13 @@ export const metadata: Metadata = {
     "Agenda, clientes y recordatorios automáticos para negocios. Menos tiempo administrando, más tiempo atendiendo.",
   applicationName: "Dlay Agenda",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: ICONOS.favicon, type: "image/svg+xml" },
+      { url: ICONOS.favicon32, sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: ICONOS.apple, sizes: "180x180", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     title: "Dlay Agenda",

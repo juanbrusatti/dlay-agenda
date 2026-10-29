@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { ICONOS } from "@/lib/marca";
 
 /**
  * Manifiesto de la PWA. `display: standalone` es lo que hace que se sienta una
@@ -23,9 +24,9 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "ltr",
     categories: ["business", "productivity"],
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: ICONOS.icon192, sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: ICONOS.icon512, sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: ICONOS.maskable512, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

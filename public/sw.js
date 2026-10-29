@@ -8,13 +8,15 @@
  * Lo único que se cachea son los archivos estáticos de la propia aplicación.
  */
 
-// Se sube cuando cambian los íconos: los de /icons/ se sirven de caché sin
-// preguntar, y sin esto los teléfonos seguirían mostrando los viejos.
-const VERSION = "v3";
+// Al subirla se borra la caché vieja de todos los teléfonos.
+const VERSION = "v4";
 const SHELL = `dlay-shell-${VERSION}`;
 const OFFLINE_URL = "/sin-conexion";
 
-const PRECACHE = [OFFLINE_URL, "/icons/icon-192.png", "/icons/icon-512.png"];
+// Los íconos no: cambian con la marca y, guardados acá, los teléfonos seguían
+// mostrando los viejos. Se piden a la red como cualquier imagen.
+const PRECACHE = [OFFLINE_URL];
+const ICONO = "/marca/v2/icon-192.png";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -53,8 +55,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Dlay";
   const options = {
     body: data.body || "",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    icon: ICONO,
+    badge: ICONO,
     // Con el mismo tag, un aviso nuevo del mismo turno reemplaza al anterior
     // en lugar de apilarse.
     tag: data.tag || undefined,
@@ -114,7 +116,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Estáticos del build: inmutables, se sirven de caché sin preguntar.
-  if (url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons/")) {
+  if (url.pathname.startsWith("/_next/static")) {
     event.respondWith(
       caches.open(SHELL).then(async (cache) => {
         const hit = await cache.match(request);

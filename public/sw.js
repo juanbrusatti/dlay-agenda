@@ -8,7 +8,9 @@
  * Lo único que se cachea son los archivos estáticos de la propia aplicación.
  */
 
-const VERSION = "v2";
+// Se sube cuando cambian los íconos: los de /icons/ se sirven de caché sin
+// preguntar, y sin esto los teléfonos seguirían mostrando los viejos.
+const VERSION = "v3";
 const SHELL = `dlay-shell-${VERSION}`;
 const OFFLINE_URL = "/sin-conexion";
 

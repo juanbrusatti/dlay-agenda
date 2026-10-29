@@ -71,8 +71,14 @@ const favicon = teja({ ancho: 0.74, radio: 112, ojo: false, glifo: false });
 await sharp(Buffer.from(normal)).resize(512, 512).png().toFile("public/icons/icon-512.png");
 await sharp(Buffer.from(normal)).resize(192, 192).png().toFile("public/icons/icon-192.png");
 await sharp(Buffer.from(maskable)).resize(512, 512).png().toFile("public/icons/maskable-512.png");
-await sharp(Buffer.from(apple)).resize(180, 180).png().toFile("public/icons/apple-touch-icon.png");
-await sharp(Buffer.from(apple)).resize(180, 180).png().toFile("src/app/apple-icon.png");
+// El de iPhone va sin transparencia y también en la raíz: Safari, además del
+// <link>, prueba /apple-touch-icon.png y /apple-touch-icon-precomposed.png, y
+// si alguno falla puede quedarse con una letra sobre fondo gris.
+const iphone = sharp(Buffer.from(apple)).resize(180, 180).flatten({ background: INDIGO }).png();
+await iphone.clone().toFile("public/icons/apple-touch-icon.png");
+await iphone.clone().toFile("public/apple-touch-icon.png");
+await iphone.clone().toFile("public/apple-touch-icon-precomposed.png");
+await iphone.clone().toFile("src/app/apple-icon.png");
 await writeFile("public/icons/icon.svg", normal);
 await writeFile("src/app/icon.svg", favicon);
 

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { publicEnv } from "@/lib/env";
+import { publicEnv, serverEnv } from "@/lib/env";
 
 /**
  * El panel de Dlay.
@@ -213,4 +213,94 @@ export async function registrarPagoSuscripcion(
     },
     "Pago registrado: la cuenta quedó cubierta 30 días más.",
   );
+}
+
+/**
+ * Da de baja un negocio con todo lo suyo. No se puede deshacer, salvo desde
+ * el respaldo de la noche.
+ *
+ * El borrado lo hace la base, que comprueba que quien pide sea de Dlay y que
+ * el nombre escrito coincida. Acá queda lo que la base no puede hacer sola:
+ * soltar el WhatsApp vinculado antes, para que el teléfono del negocio no
+ * quede con un dispositivo fantasma, y borrar después las cuentas de acceso
+ * que se quedaron sin ningún negocio.
+ */
+export async function borrarNegocio(
+  tenantId: string,
+  confirmacion: string,
+): Promise<PlataformaState> {
+  const supabase = await createClient();
+
+  const { error: puerta } = await supabase.rpc("platform_accounts");
+  if (puerta) return { error: "Esto es del panel de Dlay." };
+
+  const admin = createAdminClient();
+
+  const { data: sesion } = await admin
+    .from("baileys_sessions")
+    .select("status")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (sesion && sesion.status !== "disconnected") {
+    await desvincularWhatsapp(tenantId);
+  }
+
+  const { data, error } = await supabase.rpc("platform_delete_tenant", {
+    p_tenant: tenantId,
+    p_confirm: confirmacion,
+  });
+  if (error) {
+    return {
+      error:
+        error.code === "42501"
+          ? "Esto es del panel de Dlay."
+          : "No se pudo borrar el negocio. No se tocó nada.",
+    };
+  }
+
+  const r = data as unknown as {
+    ok: boolean;
+    error?: string;
+    nombre?: string;
+    clientes?: number;
+    turnos?: number;
+    usuarios?: string[];
+  };
+  if (!r?.ok) return { error: r?.error ?? "No se pudo borrar el negocio." };
+
+  let cuentasSinBorrar = 0;
+  for (const id of r.usuarios ?? []) {
+    const { error: errorCuenta } = await admin.auth.admin.deleteUser(id);
+    if (errorCuenta) cuentasSinBorrar++;
+  }
+
+  revalidatePath("/plataforma");
+  return {
+    error: null,
+    notice:
+      `Se borró ${r.nombre}, con ${r.clientes} clientes y ${r.turnos} turnos.` +
+      (cuentasSinBorrar > 0
+        ? " La cuenta de acceso no se pudo borrar: queda sin negocio, pero existe."
+        : ""),
+  };
+}
+
+/** Le pide al servidor de WhatsApp que suelte el número. Si falla, se sigue. */
+async function desvincularWhatsapp(tenantId: string): Promise<void> {
+  const env = serverEnv();
+  if (!env.BAILEYS_SERVER_URL || !env.BAILEYS_SECRET) return;
+  try {
+    await fetch(`${env.BAILEYS_SERVER_URL.replace(/\/$/, "")}/whatsapp/unlink`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-dlay-secret": env.BAILEYS_SECRET,
+      },
+      body: JSON.stringify({ tenantId }),
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch {
+    // El borrado del negocio no depende de esto: la sesión se va con él y el
+    // servidor deja de restaurarla al reiniciarse.
+  }
 }

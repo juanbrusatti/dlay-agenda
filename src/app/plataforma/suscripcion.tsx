@@ -9,6 +9,7 @@ import {
 } from "@/lib/actions/plataforma";
 import { formatPrice } from "@/lib/money";
 import { diasHasta, formatFecha, type Suscripcion } from "@/lib/suscripcion";
+import { BorrarNegocio } from "./borrar-negocio";
 
 const INICIAL: PlataformaState = { error: null };
 
@@ -98,6 +99,7 @@ export function SuscripcionFila({
         {estado.notice && (
           <p role="status" className="text-[12.5px] text-ok">{estado.notice}</p>
         )}
+        <BorrarNegocio tenantId={s.tenant_id} nombre={s.nombre} />
       </CardBody>
     </Card>
   );

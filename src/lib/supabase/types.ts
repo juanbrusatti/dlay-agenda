@@ -2486,6 +2486,10 @@ export type Database = {
         Args: { p_note?: string; p_period: string; p_tenant: string }
         Returns: Json
       }
+      platform_delete_tenant: {
+        Args: { p_confirm: string; p_tenant: string }
+        Returns: Json
+      }
       platform_nudge: {
         Args: { p_period: string; p_tenant: string }
         Returns: Json

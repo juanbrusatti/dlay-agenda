@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Copiable } from "@/components/ui/copiable";
+import { BorrarNegocio } from "./borrar-negocio";
 import {
   cambiarCobro,
   cambiarImporteMes,
@@ -440,6 +441,8 @@ export function Negocio({ negocio }: { negocio: NegocioPlataforma }) {
             {estado.notice}
           </p>
         )}
+
+        <BorrarNegocio tenantId={negocio.tenant_id} nombre={negocio.nombre} />
       </CardBody>
     </Card>
   );

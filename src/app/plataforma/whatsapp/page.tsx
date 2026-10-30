@@ -11,6 +11,8 @@ type Sesion = {
   negocio: string;
   status: "connecting" | "connected" | "disconnected" | "error";
   phone_number: string | null;
+  /** Cuándo se escaneó el QR; no cambia con las reconexiones del servidor. */
+  linked_at: string | null;
   last_connected_at: string | null;
   last_message_sent_at: string | null;
   error_message: string | null;
@@ -26,7 +28,13 @@ const ESTADO: Record<Sesion["status"], string> = {
 
 function fecha(iso: string | null) {
   return iso
-    ? new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })
+    ? new Date(iso).toLocaleString("es-AR", {
+        dateStyle: "short",
+        timeStyle: "short",
+        // La página se arma en el servidor, que está en UTC: sin esto, las
+        // cinco de la tarde de Córdoba se leían como las ocho de la noche.
+        timeZone: "America/Argentina/Cordoba",
+      })
     : "—";
 }
 
@@ -86,7 +94,7 @@ export default async function PlataformaWhatsappPage() {
               <dl className="grid gap-1 border-t-[1.5px] border-line pt-2 text-[12.5px]">
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">Conectado desde</dt>
-                  <dd>{fecha(s.last_connected_at)}</dd>
+                  <dd>{fecha(s.linked_at ?? s.last_connected_at)}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">Último mensaje</dt>

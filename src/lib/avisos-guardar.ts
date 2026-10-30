@@ -42,8 +42,67 @@ export async function aplicar(
     .eq("id", regla.id);
   if (error) return "No se pudo guardar el cambio. Probá de nuevo.";
 
-  if (!prender) await cancelarLoQueYaNoVa(regla.id, { id: regla.id, ...alcance });
+  const reglaNueva = { id: regla.id, ...alcance };
+  if (prender) await revivirLoQueVuelve(regla.id, reglaNueva);
+  else await cancelarLoQueYaNoVa(regla.id, reglaNueva);
   return null;
+}
+
+/** Lo que pone `cancelarLoQueYaNoVa`. Sirve para encontrarlos al volver a prender. */
+const APAGADO = "Se apagó este aviso para el servicio.";
+
+/**
+ * Vuelve a poner en cola los envíos que se cancelaron al apagar el aviso, si
+ * su turno vuelve a tener un servicio con el aviso prendido y todavía no pasó.
+ *
+ * Hace falta porque cada envío existe una sola vez por turno y regla: el que
+ * se canceló sigue ocupando su lugar, y sin esto apagar y volver a prender un
+ * aviso dejaba esos turnos sin recordatorio para siempre.
+ */
+async function revivirLoQueVuelve(
+  reglaId: string,
+  regla: { id: string; enabled: boolean; service_ids: string[] },
+) {
+  const supabase = await createClient();
+  const { data: cancelados } = await supabase
+    .from("message_jobs")
+    .select("id, appointment_id")
+    .eq("rule_id", reglaId)
+    .eq("status", "cancelled")
+    .eq("skip_reason", APAGADO);
+
+  const turnos = [...new Set((cancelados ?? []).map((j) => j.appointment_id).filter(Boolean))] as string[];
+  if (turnos.length === 0) return;
+
+  const [{ data: vigentes }, { data: servicios }] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id")
+      .in("id", turnos)
+      .in("status", ["pending", "confirmed"])
+      .gt("starts_at", new Date().toISOString()),
+    supabase
+      .from("appointment_services")
+      .select("appointment_id, service_id")
+      .in("appointment_id", turnos),
+  ]);
+
+  const siguen = new Set((vigentes ?? []).map((a) => a.id));
+  const cubiertos = new Set(
+    (servicios ?? [])
+      .filter((s) => siguen.has(s.appointment_id) && incluye(regla, s.service_id))
+      .map((s) => s.appointment_id),
+  );
+
+  const revivir = (cancelados ?? [])
+    .filter((j) => j.appointment_id && cubiertos.has(j.appointment_id))
+    .map((j) => j.id);
+  if (revivir.length === 0) return;
+
+  await supabase
+    .from("message_jobs")
+    .update({ status: "pending", skip_reason: null })
+    .in("id", revivir);
 }
 
 /**
@@ -83,6 +142,6 @@ async function cancelarLoQueYaNoVa(
 
   await supabase
     .from("message_jobs")
-    .update({ status: "cancelled", skip_reason: "Se apagó este aviso para el servicio." })
+    .update({ status: "cancelled", skip_reason: APAGADO })
     .in("id", cancelar);
 }

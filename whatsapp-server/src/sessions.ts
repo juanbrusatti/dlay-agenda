@@ -29,6 +29,12 @@ type Entry = {
   /** Quien desvincula a propósito no quiere que lo reconectemos. */
   closing: boolean;
   retries: number;
+  /**
+   * La conexión viene de un escaneo. Justo después de escanear, WhatsApp pide
+   * reiniciar la conexión, y la nueva ya arranca emparejada: sin esto no se
+   * enteraba de que el escaneo acababa de pasar y nunca anotaba la fecha.
+   */
+  recienVinculado: boolean;
 };
 
 const logger = pino({ level: process.env.LOG_LEVEL ?? "warn" });
@@ -153,7 +159,7 @@ export class Sessions {
     this.entries.delete(tenantId);
   }
 
-  private async start(tenantId: string, retries = 0) {
+  private async start(tenantId: string, retries = 0, recienVinculado = false) {
     const { state, saveCreds } = await useSupabaseAuthState(this.supabase, tenantId);
     const { version } = await fetchLatestBaileysVersion().catch(() => ({
       version: undefined,
@@ -187,6 +193,7 @@ export class Sessions {
       paired: Boolean(state.creds.me?.id),
       closing: false,
       retries,
+      recienVinculado,
     };
     this.entries.set(tenantId, entry);
 
@@ -217,8 +224,9 @@ export class Sessions {
       if (connection === "open") {
         // Si todavía no estaba emparejado, esto es el escaneo: queda la fecha.
         // Las reconexiones posteriores no la tocan.
-        const recienEscaneado = !entry.paired;
+        const recienEscaneado = !entry.paired || entry.recienVinculado;
         entry.paired = true;
+        entry.recienVinculado = false;
         entry.retries = 0;
         this.qrCount.delete(tenantId);
         await this.update(tenantId, {
@@ -272,10 +280,13 @@ export class Sessions {
 
         // `restartRequired` llega siempre justo después de escanear: es
         // normal. Cualquier otro corte, se reintenta con espera creciente.
-        const next = code === DisconnectReason.restartRequired ? 0 : entry.retries + 1;
+        const reinicio = code === DisconnectReason.restartRequired;
+        const next = reinicio ? 0 : entry.retries + 1;
         const wait = next === 0 ? 0 : Math.min(60_000, 2_000 * 2 ** Math.min(next, 5));
+        // Si el reinicio llega antes de haber abierto nunca, es el del escaneo.
+        const vieneDeEscaneo = reinicio && (!entry.paired || entry.recienVinculado);
         setTimeout(() => {
-          this.start(tenantId, next).catch((e) =>
+          this.start(tenantId, next, vieneDeEscaneo).catch((e) =>
             logger.error({ e, tenantId }, "no se pudo reconectar"),
           );
         }, wait);

@@ -5,6 +5,14 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { createClient } from "@/lib/supabase/server";
 import { serverEnv } from "@/lib/env";
 import { normalizePhone } from "@/lib/phone";
+import {
+  CUANDO,
+  EJEMPLO_CUANDO,
+  PLANTILLA_DE_FABRICA,
+  vistaPrevia,
+  type Cuando,
+} from "@/lib/avisos";
+import { getAvisos } from "@/lib/data/avisos";
 
 /**
  * WhatsApp por QR (Baileys).
@@ -116,6 +124,45 @@ export async function probarBaileys(telefono: string): Promise<{ error: string |
   const error = await pedir("/whatsapp/send", quien.tenantId, {
     to: numero.e164,
     text: "Mensaje de prueba de Dlay Agenda: si te llegó, los recordatorios por WhatsApp ya funcionan.",
+  });
+  return { error };
+}
+
+/**
+ * El recordatorio de un servicio, armado igual que la vista previa, al número
+ * que se indique: para leerlo en el teléfono antes de que le llegue a un
+ * cliente. Usa el texto que está en pantalla aunque todavía no se haya
+ * guardado; el saludo y el cierre salen de la regla, como en el envío real.
+ */
+export async function probarRecordatorio(input: {
+  telefono: string;
+  cuando: Cuando;
+  mensaje: string;
+  servicio: string;
+}): Promise<{ error: string | null }> {
+  const membership = await getCurrentTenant();
+  if (!membership) return { error: "No encontramos tu negocio." };
+  if (!atLeast(membership.role, "admin")) {
+    return { error: "Sólo titulares y administración pueden mandar pruebas." };
+  }
+  if (!(input.cuando in CUANDO)) return { error: "No sabemos qué recordatorio mandar." };
+
+  const numero = normalizePhone(input.telefono);
+  if (!numero.e164) {
+    return { error: numero.error ?? "Escribí el número con característica, por ejemplo 358 412 3456." };
+  }
+
+  const { reglas } = await getAvisos();
+  const plantilla = reglas[input.cuando]?.plantilla ?? PLANTILLA_DE_FABRICA[input.cuando];
+  const texto = vistaPrevia(plantilla, input.mensaje.slice(0, 600), {
+    negocio: membership.tenant.name,
+    servicio: input.servicio.trim() || "este servicio",
+    cuando: EJEMPLO_CUANDO[input.cuando],
+  });
+
+  const error = await pedir("/whatsapp/send", membership.tenantId, {
+    to: numero.e164,
+    text: texto,
   });
   return { error };
 }

@@ -106,6 +106,12 @@ function completar(texto: string, valores: Record<string, string>): string {
     .trim();
 }
 
+/** El turno de ejemplo de la vista previa y del mensaje de prueba. */
+export const EJEMPLO_CUANDO: Record<Cuando, string> = {
+  dia: "jueves 23 de octubre a las 15:00",
+  semana: "jueves 30 de octubre a las 15:00",
+};
+
 /** Por si la regla perdió su mensaje: el de fábrica. */
 export const PLANTILLA_DE_FABRICA: Record<Cuando, string> = {
   dia:

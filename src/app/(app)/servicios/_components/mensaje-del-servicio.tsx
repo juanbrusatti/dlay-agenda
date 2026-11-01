@@ -1,11 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
+import { probarRecordatorio } from "@/lib/actions/baileys";
 import {
   CUANDO,
   DATOS,
+  EJEMPLO_CUANDO,
   PLANTILLA_DE_FABRICA,
   vistaPrevia,
   type AvisosDelServicio,
@@ -23,11 +27,6 @@ import {
  * El saludo y el cierre son de la regla, iguales para todos los servicios, y
  * se ven en gris en la vista previa. Lo que se escribe acá va en el medio.
  */
-
-const EJEMPLO_CUANDO: Record<Cuando, string> = {
-  dia: "jueves 23 de octubre a las 15:00",
-  semana: "jueves 30 de octubre a las 15:00",
-};
 
 export function MensajeDelServicio({
   defaultValue,
@@ -150,12 +149,106 @@ export function MensajeDelServicio({
           </div>
         ))}
 
+        {avisos.editable && elegidos.length > 0 && (
+          <Prueba cuandos={elegidos} mensaje={texto} servicio={nombre} />
+        )}
+
         <p className="text-[12.5px] leading-snug text-muted">
           El saludo y el cierre son iguales para todos los servicios. Se cambian
           en Avisos → Opciones avanzadas.
         </p>
       </CardBody>
     </Card>
+  );
+}
+
+/**
+ * Mandarse el recordatorio tal cual, para leerlo en el teléfono. Va con el
+ * texto que está en pantalla, aunque todavía no se haya guardado.
+ *
+ * Está dentro del formulario del servicio, así que no es un formulario propio:
+ * el número no tiene `name` para no viajar con el servicio, y Enter manda la
+ * prueba en vez de guardar.
+ */
+function Prueba({
+  cuandos,
+  mensaje,
+  servicio,
+}: {
+  cuandos: Cuando[];
+  mensaje: string;
+  servicio: string;
+}) {
+  const [telefono, setTelefono] = useState("");
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+  const [pendiente, startTransition] = useTransition();
+  // Un rato de espera entre pruebas: cada una sale del WhatsApp del negocio.
+  const [enEspera, setEnEspera] = useState(false);
+
+  function mandar(cuando: Cuando) {
+    if (!telefono.trim() || pendiente || enEspera) return;
+    setResultado(null);
+    startTransition(async () => {
+      const r = await probarRecordatorio({ telefono, cuando, mensaje, servicio });
+      if (r.error) {
+        setResultado({ ok: false, texto: r.error });
+        return;
+      }
+      setResultado({
+        ok: true,
+        texto: "Listo: fijate en ese teléfono, tendría que llegar en unos segundos. El enlace es de ejemplo.",
+      });
+      setEnEspera(true);
+      setTimeout(() => setEnEspera(false), 15_000);
+    });
+  }
+
+  return (
+    <div className="grid gap-3 rounded-[16px] border-[1.5px] border-line p-3.5">
+      <Field
+        label="Mandármelo de prueba"
+        type="tel"
+        inputMode="tel"
+        value={telefono}
+        onChange={(e) => setTelefono(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            mandar(cuandos[0]);
+          }
+        }}
+        placeholder="358 412 3456"
+        hint="Te llega por WhatsApp tal cual lo va a recibir un cliente, con datos de ejemplo. Usá un número distinto del que está vinculado."
+      />
+      <div className="flex flex-wrap gap-2">
+        {cuandos.map((c) => (
+          <Button
+            key={c}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={pendiente || enEspera || !telefono.trim()}
+            onClick={() => mandar(c)}
+          >
+            {pendiente
+              ? "Mandando…"
+              : cuandos.length === 1
+                ? "Mandármelo"
+                : c === "dia"
+                  ? "Mandarme el del día anterior"
+                  : "Mandarme el de la semana"}
+          </Button>
+        ))}
+      </div>
+      {resultado && (
+        <p
+          role="status"
+          className={`text-[13px] ${resultado.ok ? "text-ink" : "text-danger"}`}
+        >
+          {resultado.texto}
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -33,6 +33,7 @@ export default async function EditarPlantillaPage({
         </h1>
         <FormPlantilla
           correoDisponible={correoDisponible}
+          negocio={membership.tenant.name}
           template={template}
           submitLabel="Guardar cambios"
         />

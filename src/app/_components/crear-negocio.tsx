@@ -47,7 +47,7 @@ export function CrearNegocio() {
             required
             minLength={2}
             autoFocus
-            placeholder="Estética Asusalud"
+            placeholder="Estética Luna"
             hint="Con tu nombre alcanza si trabajás por tu cuenta."
           />
 

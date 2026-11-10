@@ -106,10 +106,13 @@ function completar(texto: string, valores: Record<string, string>): string {
     .trim();
 }
 
-/** El turno de ejemplo de la vista previa y del mensaje de prueba. */
-export const EJEMPLO_CUANDO: Record<Cuando, string> = {
-  dia: "jueves 23 de octubre a las 15:00",
-  semana: "jueves 30 de octubre a las 15:00",
+/**
+ * El turno de ejemplo de la vista previa y del mensaje de prueba, escrito
+ * como lo escribe el emisor: «jueves, 23 de octubre» y «15:00».
+ */
+export const EJEMPLO_CUANDO: Record<Cuando, { fecha: string; hora: string }> = {
+  dia: { fecha: "jueves, 23 de octubre", hora: "15:00" },
+  semana: { fecha: "jueves, 30 de octubre", hora: "15:00" },
 };
 
 /** Por si la regla perdió su mensaje: el de fábrica. */
@@ -123,13 +126,15 @@ export const PLANTILLA_DE_FABRICA: Record<Cuando, string> = {
 export function vistaPrevia(
   plantilla: string,
   mensajeDelServicio: string,
-  datos: { negocio: string; servicio: string; cuando: string },
+  datos: { negocio: string; servicio: string; cuando: { fecha: string; hora: string } },
 ): string {
   const base: Record<string, string> = {
     cliente: "Mirián",
     estetica: datos.negocio,
     servicio: datos.servicio,
-    cuando: datos.cuando,
+    fecha: datos.cuando.fecha,
+    hora: datos.cuando.hora,
+    cuando: `${datos.cuando.fecha} a las ${datos.cuando.hora}`,
     link: "dlay-agenda.vercel.app/t/x7Kp2",
   };
   const mensaje = completar(mensajeDelServicio, base);

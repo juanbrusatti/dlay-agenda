@@ -33,11 +33,15 @@ begin
   end if;
 
   -- 1. El mensaje de las dos horas.
-  insert into public.message_templates (tenant_id, name, channel, category, body)
+  -- `provider_name` lo exige la base para todo mensaje de WhatsApp (es el
+  -- nombre que tendría en Meta); por QR no se usa.
+  insert into public.message_templates
+    (tenant_id, name, channel, category, body, provider_name)
   values (
     v_tenant, 'Aviso 2 horas antes · WhatsApp', 'whatsapp', 'utility',
     E'Hola {{cliente}}👋 te recuerdo que faltan 2 horitas para tu turno de las '
-    || E'{{hora}} para {{servicio}} en {{estetica}}!\n\nNos vemos pronto 😉'
+    || E'{{hora}} para {{servicio}} en {{estetica}}!\n\nNos vemos pronto 😉',
+    'aviso_2_horas_antes'
   )
   returning id into v_tpl;
 

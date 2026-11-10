@@ -39,10 +39,13 @@ export function FormPlantilla({
   template,
   submitLabel,
   correoDisponible,
+  negocio,
 }: {
   template?: Template;
   submitLabel: string;
   correoDisponible: boolean;
+  /** Para la vista previa: que se lea con el nombre de su negocio. */
+  negocio: string;
 }) {
   const action = saveTemplate.bind(null, template?.id ?? null);
   const [state, formAction] = useActionState(action, INITIAL);
@@ -54,11 +57,11 @@ export function FormPlantilla({
 
   const vistaPrevia = body
     .replaceAll("{{cliente}}", "Mirián")
-    .replaceAll("{{fecha}}", "lunes 14 de septiembre")
+    .replaceAll("{{fecha}}", "lunes, 14 de septiembre")
     .replaceAll("{{hora}}", "09:00")
-    .replaceAll("{{cuando}}", "lunes 14 de septiembre a las 09:00")
+    .replaceAll("{{cuando}}", "lunes, 14 de septiembre a las 09:00")
     .replaceAll("{{servicio}}", "depilación definitiva")
-    .replaceAll("{{estetica}}", "Estética Asusalud")
+    .replaceAll("{{estetica}}", negocio)
     .replaceAll("{{link}}", "dlay.app/t/a1b2c3…")
     .replaceAll(
       "{{mensaje}}",

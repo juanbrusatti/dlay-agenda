@@ -20,7 +20,11 @@ export default async function NuevaPlantillaPage() {
         <h1 className="text-[28px] font-bold leading-tight tracking-[-0.03em]">
           Nuevo mensaje
         </h1>
-        <FormPlantilla correoDisponible={correoDisponible} submitLabel="Guardar mensaje" />
+        <FormPlantilla
+          correoDisponible={correoDisponible}
+          negocio={membership.tenant.name}
+          submitLabel="Guardar mensaje"
+        />
       </main>
     </>
   );

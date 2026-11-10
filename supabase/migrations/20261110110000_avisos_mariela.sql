@@ -52,9 +52,15 @@ begin
 
   -- 2. La regla: nombre corto y su propia franja. Lo pendiente se vuelve a
   --    programar en la próxima vuelta del planificador.
+  --    También los que nacieron salteados por llegar tarde con la franja del
+  --    negocio: con la franja propia sí llegan a tiempo.
   delete from public.message_jobs
   where rule_id = v_regla
-    and status = 'pending';
+    and (
+      status = 'pending'
+      or (status = 'skipped'
+          and skip_reason = 'Con el horario de envío, el aviso llegaba tarde para este turno.')
+    );
 
   update public.reminder_rules
   set name = 'Aviso 2 horas antes',

@@ -13,6 +13,7 @@ type Negocio = {
   creado: string;
   suscripcion: { plan?: string; estado?: string; prueba_hasta?: string } | null;
   titular: { nombre: string | null; correo: string | null; ultimo_ingreso: string | null } | null;
+  /** Last activity of anyone on the team: sign-in or session refresh. */
   ultimo_ingreso_equipo: string | null;
   telefono: string | null;
   whatsapp: {
@@ -260,7 +261,7 @@ function FichaNegocio({
             {n.titular?.correo && <span className="block text-muted">{n.titular.correo}</span>}
             {n.telefono && <span className="block text-muted">{n.telefono}</span>}
           </Dato>
-          <Dato titulo="Último ingreso">
+          <Dato titulo="Último uso">
             {hace(n.ultimo_ingreso_equipo, ahora)}
             <span className="block text-muted">{fecha(n.ultimo_ingreso_equipo)}</span>
           </Dato>

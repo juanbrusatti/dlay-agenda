@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardBody, CardFigure } from "@/components/ui/card";
-import { getNegocios, getSuscripciones } from "@/lib/data/cuenta";
+import { getNegocios, getSuscripciones, getVisitasPortada } from "@/lib/data/cuenta";
 import { formatPrice } from "@/lib/money";
 import { Negocio } from "./negocio";
 import { SuscripcionFila } from "./suscripcion";
+import { Visitas } from "./visitas";
 
 export const metadata: Metadata = { title: "Plataforma" };
 
@@ -21,9 +22,10 @@ export const metadata: Metadata = { title: "Plataforma" };
  * sepa que la pantalla existe.
  */
 export default async function PlataformaPage() {
-  const [todos, suscripciones] = await Promise.all([
+  const [todos, suscripciones, visitas] = await Promise.all([
     getNegocios(),
     getSuscripciones(),
+    getVisitasPortada(),
   ]);
   if (!todos) notFound();
 
@@ -67,6 +69,8 @@ export default async function PlataformaPage() {
           </Link>
         </div>
       </header>
+
+      {visitas && <Visitas filas={visitas} />}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Card accent>

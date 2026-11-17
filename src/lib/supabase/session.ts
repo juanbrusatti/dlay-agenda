@@ -23,6 +23,8 @@ const PUBLIC_PREFIXES = [
   // los lee quien evalúa en Meta y quien quiere saber qué guardamos
   // antes de decidir si nos confía sus datos.
   "/legal",
+  // The home page for each rubro with its own page.
+  "/psicologos",
 ];
 
 function isPublic(pathname: string) {

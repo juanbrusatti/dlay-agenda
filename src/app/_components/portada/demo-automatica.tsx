@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useReducer, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { formatPrice } from "@/lib/money";
 import { ABONO_MENSUAL_CENTS } from "@/lib/precio";
+import { recordatorioDe, type EjemploPortada } from "./ejemplos";
 
 /**
  * Un día con Dlay, en un minuto y sin tocar nada.
@@ -18,8 +19,6 @@ import { ABONO_MENSUAL_CENTS } from "@/lib/precio";
  * Se frena sola cuando no está a la vista o la pestaña queda en segundo plano,
  * y quien pidió menos movimiento la ve quieta, escena por escena.
  */
-
-const NEGOCIO = "Estudio Malva";
 
 type Pantalla = "telefono" | "sistema" | "cierre";
 
@@ -204,13 +203,19 @@ function Dato({
 // Las escenas
 // ---------------------------------------------------------------------------
 
-const ESCENAS: Escena[] = [
+/** The scenes, told with one rubro's made-up business. */
+function crearEscenas(e: EjemploPortada): Escena[] {
+  const NEGOCIO = e.negocio;
+  const turno = (id: string) => e.turnos.find((x) => x.id === id)!;
+  const sofia = turno("sofia");
+
+  return [
   {
     clave: "reserva",
     capitulo: "Reserva online",
     duracion: 7200,
     pantalla: "telefono",
-    ruta: "dlay-agenda.vercel.app/r/estudio-malva",
+    ruta: `dlay-agenda.vercel.app/r/${e.slug}`,
     hora: "Martes 23:40",
     relato:
       "Son las 23:40. Sofía saca turno desde el celular, sin escribirte ni esperar respuesta.",
@@ -225,7 +230,7 @@ const ESCENAS: Escena[] = [
           </p>
         </div>
         <div className="grid gap-1.5">
-          {["Limpieza facial · 60 min", "Perfilado de cejas · 30 min"].map(
+          {e.reservables.map(
             (s, i) => (
               <Opcion
                 key={s}
@@ -268,7 +273,7 @@ const ESCENAS: Escena[] = [
               ¡Listo! Tu turno quedó reservado
             </p>
             <p className="mt-0.5 text-[12px] text-muted">
-              Jueves 12 a las 15:00 · Limpieza facial
+              Jueves 12 a las 15:00 · {sofia.servicio}
             </p>
           </div>
         )}
@@ -288,20 +293,21 @@ const ESCENAS: Escena[] = [
     dibujar: (t) => (
       <div className="relative grid gap-2.5">
         <p className="text-[16px] font-bold tracking-[-0.02em]">Jueves 12</p>
-        <Turno hora="10:00" nombre="Mica Sosa" servicio="Uñas semipermanentes" estado="Sin confirmar" clase={SIN_CONFIRMAR} />
-        <Turno hora="14:00" nombre="Carla Benítez" servicio="Perfilado de cejas" estado="Sin confirmar" clase={SIN_CONFIRMAR} />
+        {["mica", "carla"].map((id) => (
+          <Turno key={id} hora={turno(id).hora} nombre={turno(id).nombre} servicio={turno(id).servicio} estado="Sin confirmar" clase={SIN_CONFIRMAR} />
+        ))}
         {ya(t, 2600) && (
           <Turno
             hora="15:00"
             nombre="Sofía Ramírez"
-            servicio="Limpieza facial · 15:00–16:00"
+            servicio={`${sofia.servicio} · ${sofia.hora}–${sofia.fin}`}
             estado="Sin confirmar"
             clase={SIN_CONFIRMAR}
             nuevo
             resaltado
           />
         )}
-        <Turno hora="16:00" nombre="Lu Ferreyra" servicio="Masaje descontracturante" estado="Sin confirmar" clase={SIN_CONFIRMAR} />
+        <Turno hora={turno("lu").hora} nombre={turno("lu").nombre} servicio={turno("lu").servicio} estado="Sin confirmar" clase={SIN_CONFIRMAR} />
 
         {ya(t, 900) && !ya(t, 5200) && (
           <div className="demo-aparece absolute -top-1 right-0 w-[min(100%,17rem)] rounded-[16px] border-[1.5px] border-line bg-surface p-3 shadow-[0_8px_24px_-12px_rgb(0_0_0/0.35)]">
@@ -310,7 +316,7 @@ const ESCENAS: Escena[] = [
             </p>
             <p className="text-[13px] font-semibold">Reserva nueva</p>
             <p className="text-[12px] text-muted">
-              Sofía Ramírez · Limpieza facial · jue 12, 15:00
+              Sofía Ramírez · {sofia.servicio} · jue 12, 15:00
             </p>
           </div>
         )}
@@ -330,16 +336,14 @@ const ESCENAS: Escena[] = [
       <div className="grid gap-2">
         <div className="flex items-center gap-2 border-b-[1.5px] border-line pb-2">
           <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-accent text-[12px] font-semibold text-on-accent">
-            M
+            {e.inicial}
           </span>
           <span className="text-[13px] font-semibold">{NEGOCIO}</span>
         </div>
         {ya(t, 700) && (
           <div className="grid max-w-[94%] gap-1">
             <Burbuja hora="10:00">
-              Hola Sofía! Te escribimos de {NEGOCIO} para recordarte tu turno
-              de mañana jueves 12 a las 15:00, para limpieza facial. Vení con la
-              cara lavada y sin maquillaje.{" "}
+              {recordatorioDe(e, "jueves 12 a las 15:00")} {e.indicacion}{" "}
               <Toque activo={ya(t, 2400) && !ya(t, 2900)}>
                 <span className="text-accent-text underline">
                   dlay-agenda.vercel.app/t/k3f9q2
@@ -351,7 +355,7 @@ const ESCENAS: Escena[] = [
         {/* El enlace abre la página del turno, con los botones del negocio. */}
         {ya(t, 2900) && (
           <div className="demo-aparece grid gap-1.5 rounded-[14px] border-[1.5px] border-accent bg-surface p-2.5">
-            <p className="text-[12px] font-semibold">Jueves 12 · 15:00 · Limpieza facial</p>
+            <p className="text-[12px] font-semibold">Jueves 12 · 15:00 · {sofia.servicio}</p>
             {ya(t, 4000) ? (
               <p className="text-[12.5px] text-ok">¡Listo, te esperamos! Quedó confirmado.</p>
             ) : (
@@ -396,8 +400,7 @@ const ESCENAS: Escena[] = [
     ruta: "dlay-agenda.vercel.app/clientes/sofia-ramirez",
     seccion: "Clientes",
     hora: "Jueves 14:55",
-    relato:
-      "Antes de que llegue, abrís su ficha: alergias, cuántas veces vino, cuánto gastó y lo que anotaste la última vez.",
+    relato: e.ficha.relato,
     dibujar: (t) => (
       <div className="grid gap-2.5">
         <div>
@@ -409,22 +412,22 @@ const ESCENAS: Escena[] = [
             <p className="text-[10.5px] font-semibold uppercase tracking-wider text-warn">
               Atención
             </p>
-            <p className="text-[13px]">Alérgica al ácido glicólico.</p>
+            <p className="text-[13px]">{e.ficha.alerta}</p>
           </div>
         )}
         <div className="grid grid-cols-3 gap-1.5">
           <Dato etiqueta="Atendidos" valor={String(contar(14, t, 1300))} />
-          <Dato etiqueta="Última vez" valor="3 sem." />
+          <Dato etiqueta="Última vez" valor={e.ficha.ultimaVez} />
           <Dato
             etiqueta="Gastó"
-            valor={formatPrice(contar(31200000, t, 1300))}
+            valor={formatPrice(contar(e.ficha.gastoCents, t, 1300))}
           />
         </div>
         {ya(t, 2800) && (
           <div className="demo-aparece flex flex-wrap gap-1.5">
-            {["Facial", "Frecuente"].map((e) => (
-              <span key={e} className="rounded-pill bg-accent-wash px-2.5 py-1 text-[11.5px] font-medium text-accent-text">
-                {e}
+            {e.ficha.etiquetas.map((x) => (
+              <span key={x} className="rounded-pill bg-accent-wash px-2.5 py-1 text-[11.5px] font-medium text-accent-text">
+                {x}
               </span>
             ))}
           </div>
@@ -435,7 +438,7 @@ const ESCENAS: Escena[] = [
               Seguimiento
             </p>
             <p className="text-[12.5px]">
-              La piel reaccionó bien. Próxima: probar peeling suave.
+              {e.ficha.seguimiento}
             </p>
           </div>
         )}
@@ -460,7 +463,7 @@ const ESCENAS: Escena[] = [
               Cobrar turno
             </p>
             <p className="text-[16px] font-bold tracking-[-0.02em]">
-              Sofía Ramírez · {formatPrice(2500000)}
+              Sofía Ramírez · {formatPrice(e.cobroCents)}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -480,7 +483,7 @@ const ESCENAS: Escena[] = [
             <div className="demo-aparece flex items-center justify-between rounded-[14px] bg-ok-wash px-3 py-2.5">
               <span className="text-[13px] font-semibold text-ok">Cobrado</span>
               <span className="text-[13px] tabular-nums text-ok">
-                + {formatPrice(2500000)}
+                + {formatPrice(e.cobroCents)}
               </span>
             </div>
           )}
@@ -625,6 +628,7 @@ const ESCENAS: Escena[] = [
     ),
   },
 ];
+}
 
 const SECCIONES = ["Agenda", "Clientes", "Caja", "Informes", "Avisos", "Ajustes"];
 
@@ -637,11 +641,11 @@ type Paso =
   | { tipo: "avanzar"; ms: number }
   | { tipo: "ir"; escena: number; t: number };
 
-function reloj(estado: Reloj, paso: Paso): Reloj {
+function reloj(escenas: Escena[], estado: Reloj, paso: Paso): Reloj {
   if (paso.tipo === "ir") return { escena: paso.escena, t: paso.t };
   const t = estado.t + paso.ms;
-  if (t < ESCENAS[estado.escena].duracion) return { ...estado, t };
-  return { escena: (estado.escena + 1) % ESCENAS.length, t: 0 };
+  if (t < escenas[estado.escena].duracion) return { ...estado, t };
+  return { escena: (estado.escena + 1) % escenas.length, t: 0 };
 }
 
 function Marco({ escena, children }: { escena: Escena; children: ReactNode }) {
@@ -707,8 +711,12 @@ function Marco({ escena, children }: { escena: Escena; children: ReactNode }) {
   );
 }
 
-export function DemoAutomatica() {
-  const [estado, mover] = useReducer(reloj, { escena: 0, t: 0 });
+export function DemoAutomatica({ ejemplo }: { ejemplo: EjemploPortada }) {
+  const escenas = useMemo(() => crearEscenas(ejemplo), [ejemplo]);
+  const [estado, mover] = useReducer(
+    (s: Reloj, p: Paso) => reloj(escenas, s, p),
+    { escena: 0, t: 0 },
+  );
   const [pausada, setPausada] = useState(false);
   const [quieta, setQuieta] = useState(false);
   const [enPantalla, setEnPantalla] = useState(true);
@@ -722,13 +730,13 @@ export function DemoAutomatica() {
     const aplicar = () => {
       setQuieta(mq.matches);
       if (mq.matches) {
-        mover({ tipo: "ir", escena: 0, t: ESCENAS[0].duracion - 1 });
+        mover({ tipo: "ir", escena: 0, t: escenas[0].duracion - 1 });
       }
     };
     aplicar();
     mq.addEventListener("change", aplicar);
     return () => mq.removeEventListener("change", aplicar);
-  }, []);
+  }, [escenas]);
 
   // Fuera de la vista o con la pestaña escondida no corre: así, al volver, la
   // persona la encuentra donde la dejó y no en una escena cualquiera.
@@ -761,10 +769,10 @@ export function DemoAutomatica() {
     return () => clearInterval(id);
   }, [corre]);
 
-  const escena = ESCENAS[estado.escena];
+  const escena = escenas[estado.escena];
 
   function irA(i: number) {
-    mover({ tipo: "ir", escena: i, t: quieta ? ESCENAS[i].duracion - 1 : 0 });
+    mover({ tipo: "ir", escena: i, t: quieta ? escenas[i].duracion - 1 : 0 });
   }
 
   return (
@@ -773,7 +781,7 @@ export function DemoAutomatica() {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => (quieta ? irA((estado.escena + 1) % ESCENAS.length) : setPausada((p) => !p))}
+          onClick={() => (quieta ? irA((estado.escena + 1) % escenas.length) : setPausada((p) => !p))}
           aria-label={quieta ? "Siguiente escena" : pausada ? "Seguir" : "Pausar"}
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-[1.5px] border-line bg-surface text-ink hover:border-accent"
         >
@@ -790,7 +798,7 @@ export function DemoAutomatica() {
           )}
         </button>
         <div className="grid flex-1 grid-flow-col gap-1">
-          {ESCENAS.map((e, i) => (
+          {escenas.map((e, i) => (
             <button
               key={e.clave}
               type="button"

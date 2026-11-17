@@ -1,5 +1,6 @@
 "use client";
 
+import { useEjemplos } from "@/components/rubro/contexto";
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ function Submit({ kind }: { kind: "income" | "expense" }) {
  */
 export function Movimiento() {
   const [state, action] = useActionState(registrarMovimiento, INITIAL);
+  const ejemplos = useEjemplos();
   const [kind, setKind] = useState<"income" | "expense">("income");
   const [method, setMethod] = useState("cash");
   const [concepto, setConcepto] = useState("");
@@ -111,7 +113,7 @@ export function Movimiento() {
             minLength={2}
             value={concepto}
             onChange={(e) => setConcepto(e.target.value)}
-            placeholder={kind === "income" ? "Masaje de Mirián" : "Compra de algodón"}
+            placeholder={kind === "income" ? ejemplos.cobro : ejemplos.gasto}
           />
 
           {kind === "expense" && (

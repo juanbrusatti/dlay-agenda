@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { recordatorioDe, type EjemploPortada } from "./ejemplos";
 
 /**
  * El truco del producto, para tocar.
@@ -15,8 +16,6 @@ import { Button } from "@/components/ui/button";
  * mismos tres botones, y la agenda usa las mismas etiquetas y colores que la de
  * verdad. Una demostración que miente es peor que no tener ninguna.
  */
-
-const NEGOCIO = "Estudio Malva";
 
 type Fase =
   | "antes"
@@ -145,47 +144,10 @@ function Burbuja({
   );
 }
 
-const INICIALES: Turno[] = [
-  {
-    id: "mica",
-    hora: "10:00",
-    fin: "11:00",
-    nombre: "Mica Sosa",
-    servicio: "Uñas semipermanentes",
-    precio: "$ 14.000",
-    estado: "pending",
-  },
-  {
-    id: "carla",
-    hora: "14:00",
-    fin: "14:30",
-    nombre: "Carla Benítez",
-    servicio: "Perfilado de cejas",
-    precio: "$ 9.000",
-    estado: "pending",
-  },
-  {
-    id: "sofia",
-    hora: "15:00",
-    fin: "16:00",
-    nombre: "Sofía Ramírez",
-    servicio: "Limpieza facial",
-    precio: "$ 25.000",
-    estado: "pending",
-    alerta: true,
-  },
-  {
-    id: "lu",
-    hora: "16:00",
-    fin: "17:00",
-    nombre: "Lu Ferreyra",
-    servicio: "Masaje descontracturante",
-    precio: "$ 18.000",
-    estado: "pending",
-  },
-];
-
-export function DemoRecordatorio() {
+export function DemoRecordatorio({ ejemplo }: { ejemplo: EjemploPortada }) {
+  const NEGOCIO = ejemplo.negocio;
+  const INICIALES: Turno[] = ejemplo.turnos.map((t) => ({ ...t, estado: "pending" }));
+  const sofia = ejemplo.turnos.find((t) => t.id === "sofia")!;
   const [fase, setFase] = useState<Fase>("antes");
   const [turnos, setTurnos] = useState<Turno[]>(INICIALES);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -343,7 +305,7 @@ export function DemoRecordatorio() {
               aria-hidden
               className="grid h-8 w-8 place-items-center rounded-full bg-accent text-[13px] font-semibold text-on-accent"
             >
-              M
+              {ejemplo.inicial}
             </span>
             <span className="min-w-0">
               <span className="block truncate text-[13.5px] font-semibold">
@@ -364,14 +326,10 @@ export function DemoRecordatorio() {
               <>
                 <div className="max-w-[92%]">
                   <Burbuja hora="10:00">
-                    Hola Sofía! Te escribimos de {NEGOCIO} para recordarte tu
-                    turno de mañana jueves 12 de marzo a las 15:00, para
-                    limpieza facial.
+                    {recordatorioDe(ejemplo, "jueves 12 de marzo a las 15:00")}
+                    <span className="mt-2 block">{ejemplo.indicacion}</span>
                     <span className="mt-2 block">
-                      Vení con la cara lavada y sin maquillaje.
-                    </span>
-                    <span className="mt-2 block">
-                      Para confirmar el turno o avisarnos que no vas a venir:{" "}
+                      {ejemplo.enlace}{" "}
                       <button
                         type="button"
                         disabled={fase !== "enviado"}
@@ -381,7 +339,7 @@ export function DemoRecordatorio() {
                         dlay-agenda.vercel.app/t/k3f9q2
                       </button>
                     </span>
-                    <span className="mt-2 block">¡Te esperamos!</span>
+                    <span className="mt-2 block">{ejemplo.despedida}</span>
                   </Burbuja>
                 </div>
 
@@ -392,7 +350,7 @@ export function DemoRecordatorio() {
                       Hola Sofía, este es tu turno en {NEGOCIO}
                     </p>
                     <p className="text-[13.5px] font-semibold">
-                      Jueves 12 · 15:00 · Limpieza facial
+                      Jueves 12 · 15:00 · {sofia.servicio}
                     </p>
                     {(
                       [

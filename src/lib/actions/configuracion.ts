@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { RUBROS } from "@/lib/rubros";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { normalizePhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,8 @@ function friendly(code: string | undefined): string {
 const esteticaSchema = z.object({
   name: z.string().trim().min(2, "Poné el nombre del negocio."),
   timezone: z.string().trim().min(3),
+  // Optional: a form without the field keeps the current rubro.
+  rubro: z.enum(RUBROS).optional(),
   address: z.string().trim().max(200).optional(),
   phone: z.string().trim().max(40).optional(),
 });
@@ -33,6 +36,7 @@ export async function saveEstetica(
   const parsed = esteticaSchema.safeParse({
     name: String(formData.get("name") ?? ""),
     timezone: String(formData.get("timezone") ?? ""),
+    rubro: formData.get("rubro") ?? undefined,
     address: String(formData.get("address") ?? "").trim() || undefined,
     phone: String(formData.get("phone") ?? "").trim() || undefined,
   });
@@ -48,7 +52,11 @@ export async function saveEstetica(
 
   const { error } = await supabase
     .from("tenants")
-    .update({ name: parsed.data.name, timezone: parsed.data.timezone })
+    .update({
+      name: parsed.data.name,
+      timezone: parsed.data.timezone,
+      ...(parsed.data.rubro && { rubro: parsed.data.rubro }),
+    })
     .eq("id", membership.tenantId);
 
   if (error) return { error: friendly(error.code) };

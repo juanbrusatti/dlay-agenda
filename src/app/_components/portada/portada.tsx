@@ -10,6 +10,49 @@ import { Button } from "@/components/ui/button";
 import { DemoAutomatica } from "./demo-automatica";
 import { DemoRecordatorio } from "./demo-recordatorio";
 import { META_VISIBLE } from "@/lib/canal-whatsapp";
+import type { Rubro } from "@/lib/rubros";
+import { EJEMPLOS_PORTADA } from "./ejemplos";
+
+/** What changes on the home page for a rubro with its own page. */
+type Copia = {
+  bajada: string;
+  cierre: string;
+  /** Cards about what this rubro cares about, if it has any. */
+  pensado?: { titulo: string; bajada: string; puntos: [string, string][] };
+};
+
+const COPIA: Record<"estetica" | "psicologia", Copia> = {
+  estetica: {
+    bajada:
+      "Dlay le recuerda el turno a cada cliente, recibe la respuesta y actualiza la agenda sola. Vos atendés.",
+    cierre:
+      "Se arma en una tarde. Si venís de otro sistema, tus clientes se importan desde un Excel y no se pierde nada.",
+  },
+  psicologia: {
+    bajada:
+      "Dlay le recuerda cada sesión a tus pacientes por WhatsApp, recibe la respuesta y actualiza tu agenda sola. Vos atendés.",
+    cierre:
+      "Se arma en una tarde. Si llevás tus pacientes en un Excel, se importan y no se pierde nada.",
+    pensado: {
+      titulo: "Pensado para un consultorio.",
+      bajada: "Lo que más nos preguntan los psicólogos antes de empezar.",
+      puntos: [
+        [
+          "Recordatorios discretos",
+          "Los mensajes de fábrica no dicen de qué es la consulta ni nombran el consultorio: «te recuerdo nuestro encuentro de mañana a las 15:00». Si alguien ve la pantalla del teléfono, no se entera de nada. Y el texto lo podés cambiar.",
+        ],
+        [
+          "Tu política de cancelación",
+          "Elegís hasta cuántas horas antes se puede cancelar o cambiar desde el enlace. Pasado ese plazo, el paciente tiene que avisarte a vos.",
+        ],
+        [
+          "Vos decidís quién reserva",
+          "La reserva online se puede apagar: cargás vos cada sesión y el recordatorio sale igual. O la dejás abierta sólo para primeras entrevistas.",
+        ],
+      ],
+    },
+  },
+};
 
 /**
  * La portada: lo único que ve alguien que todavía no sabe qué es Dlay.
@@ -51,7 +94,10 @@ function Seccion({
   );
 }
 
-export function Portada() {
+export function Portada({ rubro = "estetica" }: { rubro?: Rubro }) {
+  const copia = rubro === "psicologia" ? COPIA.psicologia : COPIA.estetica;
+  const ejemplo = EJEMPLOS_PORTADA[rubro] ?? EJEMPLOS_PORTADA.estetica;
+
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
@@ -69,8 +115,7 @@ export function Portada() {
               Dejá de perseguir confirmaciones por WhatsApp.
             </h1>
             <p className="max-w-[46ch] text-[17px] leading-relaxed text-muted sm:text-[19px]">
-              Dlay le recuerda el turno a cada cliente, recibe la respuesta y
-              actualiza la agenda sola. Vos atendés.
+              {copia.bajada}
             </p>
           </div>
 
@@ -83,21 +128,48 @@ export function Portada() {
             </span>
           </div>
 
+          {rubro === "estetica" && (
+            <p className="text-[14px] text-muted">
+              ¿Atendés en un consultorio de psicología?{" "}
+              <Link href="/psicologos" className="text-accent-text underline-offset-2 hover:underline">
+                Mirá cómo funciona para vos →
+              </Link>
+            </p>
+          )}
+
           <div className="grid gap-3 pt-2">
             <p className="font-hand text-[24px] leading-none text-accent-text">
               Un día con Dlay, en un minuto ↓
             </p>
-            <DemoAutomatica />
+            <DemoAutomatica ejemplo={ejemplo} />
           </div>
         </section>
 
         {/* ── Para tocar ────────────────────────────────────────────── */}
         <Seccion
           titulo="Ahora probalo vos."
-          bajada="Sos el cliente: tocá el enlace del recordatorio y mirá cómo cambia la agenda."
+          bajada={`${ejemplo.quienSos}: tocá el enlace del recordatorio y mirá cómo cambia la agenda.`}
         >
-          <DemoRecordatorio />
+          <DemoRecordatorio ejemplo={ejemplo} />
         </Seccion>
+
+        {copia.pensado && (
+          <Seccion titulo={copia.pensado.titulo} bajada={copia.pensado.bajada}>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {copia.pensado.puntos.map(([titulo, texto]) => (
+                <div
+                  key={titulo}
+                  className="rounded-card border-[1.5px] border-line bg-surface p-5"
+                >
+                  <p className="text-[15px] font-semibold">{titulo}</p>
+                  <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">
+                    {texto}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Seccion>
+        )}
 
         {/* ── El precio ──────────────────────────────────────────────── */}
         <Seccion
@@ -187,8 +259,7 @@ export function Portada() {
             Más atender.
           </p>
           <p className="max-w-[44ch] text-[15px] leading-relaxed opacity-90">
-            Se arma en una tarde. Si venís de otro sistema, tus clientes se
-            importan desde un Excel y no se pierde nada.
+            {copia.cierre}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button

@@ -3,13 +3,14 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
+import { rubroDe, type Rubro } from "@/lib/rubros";
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
 export type Membership = {
   tenantId: string;
   role: AppRole;
-  tenant: { id: string; name: string; slug: string; timezone: string };
+  tenant: { id: string; name: string; slug: string; timezone: string; rubro: Rubro };
 };
 
 /**
@@ -32,7 +33,7 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
 
   const { data, error } = await supabase
     .from("memberships")
-    .select("tenant_id, role, tenants ( id, name, slug, timezone )")
+    .select("tenant_id, role, tenants ( id, name, slug, timezone, rubro )")
     .eq("status", "active");
 
   if (error) throw error;
@@ -42,7 +43,10 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
     .map((row) => ({
       tenantId: row.tenant_id,
       role: row.role,
-      tenant: row.tenants as Membership["tenant"],
+      tenant: {
+        ...(row.tenants as Omit<Membership["tenant"], "rubro">),
+        rubro: rubroDe((row.tenants as { rubro?: string }).rubro),
+      },
     }));
 });
 

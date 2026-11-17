@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { listServices } from "@/lib/data/services";
+import { EJEMPLOS } from "@/lib/rubros";
 import { ServiceList } from "./_components/service-list";
 
 export const metadata: Metadata = { title: "Servicios" };
@@ -51,9 +52,9 @@ export default async function ServiciosPage() {
             }
           >
             <p>
-              Un servicio es cada cosa que hacés: una depilación, una limpieza
-              de cutis, un masaje. Cada uno tiene su duración, su precio y
-              cuántas personas podés atender a la vez.
+              Un servicio es cada cosa que hacés:{" "}
+              {EJEMPLOS[membership.tenant.rubro].servicios}. Cada uno tiene su
+              duración, su precio y cuántas personas podés atender a la vez.
             </p>
             <p className="mt-2">
               Sin servicios cargados no se pueden agendar turnos, así que este

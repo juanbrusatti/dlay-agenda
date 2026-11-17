@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
 import { saveEstetica, type FormState } from "@/lib/actions/configuracion";
 import { TIMEZONES, type Branch, type Tenant } from "@/lib/configuracion";
+import { EJEMPLOS, RUBROS, rubroDe } from "@/lib/rubros";
 import { Guardar, Resultado } from "../_components/guardar";
 import { useRefrescarAlGuardar } from "../_components/refrescar";
 
@@ -42,6 +43,19 @@ export function FormEstetica({
             {TIMEZONES.map((tz) => (
               <option key={tz.value} value={tz.value}>
                 {tz.label}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            label="A qué te dedicás"
+            name="rubro"
+            defaultValue={rubroDe(tenant.rubro)}
+            hint="Cambia los ejemplos que ves en el sistema. En Psicología, los recordatorios de fábrica no nombran el servicio ni el consultorio; si ya escribiste los tuyos, no se tocan."
+          >
+            {RUBROS.map((r) => (
+              <option key={r} value={r}>
+                {EJEMPLOS[r].etiqueta}
               </option>
             ))}
           </Select>

@@ -2032,6 +2032,7 @@ export type Database = {
           id: string
           locale: string
           name: string
+          rubro: string
           slug: string
           status: string
           timezone: string
@@ -2043,6 +2044,7 @@ export type Database = {
           id?: string
           locale?: string
           name: string
+          rubro?: string
           slug: string
           status?: string
           timezone?: string
@@ -2054,6 +2056,7 @@ export type Database = {
           id?: string
           locale?: string
           name?: string
+          rubro?: string
           slug?: string
           status?: string
           timezone?: string

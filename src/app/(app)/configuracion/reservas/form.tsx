@@ -1,5 +1,6 @@
 "use client";
 
+import { useEjemplos } from "@/components/rubro/contexto";
 import { useActionState, useState } from "react";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
@@ -21,6 +22,7 @@ export function FormReservas({
   link: string;
 }) {
   const [state, action] = useActionState(saveReservas, INITIAL);
+  const ejemplos = useEjemplos();
   useRefrescarAlGuardar(state.notice);
 
   /**
@@ -161,7 +163,7 @@ export function FormReservas({
             name="welcomeText"
             maxLength={400}
             defaultValue={settings.welcome_text ?? ""}
-            placeholder="Depilación definitiva, tratamientos faciales y masajes."
+            placeholder={ejemplos.bienvenida}
             hint="Un par de líneas, arriba de todo. Opcional."
           />
 

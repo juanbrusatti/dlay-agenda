@@ -1,5 +1,6 @@
 "use client";
 
+import { useEjemplos } from "@/components/rubro/contexto";
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export function MensajeDelServicio({
   const [texto, setTexto] = useState(defaultValue);
   const [marcados, setMarcados] = useState(avisos.marcados);
   const area = useRef<HTMLTextAreaElement>(null);
+  const ejemplos = useEjemplos();
 
   // El dato va donde está el cursor, no al final: así se puede escribir
   // «Hola [Nombre], te esperamos» sin tener que mover nada después.
@@ -109,7 +111,7 @@ export function MensajeDelServicio({
             rows={4}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="No te depiles con cera ni pinza 15 días antes, y vení sin cremas."
+            placeholder={ejemplos.indicacion}
             hint="Indicaciones, qué traer, tu política de ausencias. Si lo dejás vacío, el recordatorio sale igual, sin esta parte."
           />
           <div className="flex flex-wrap items-center gap-1.5">

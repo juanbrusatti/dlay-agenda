@@ -1,5 +1,6 @@
 "use client";
 
+import { useEjemplos } from "@/components/rubro/contexto";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
@@ -43,6 +44,7 @@ export function ServiceForm({
   submitLabel: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
+  const ejemplos = useEjemplos();
 
   /**
    * Tras un error, los valores que volvieron del servidor ganan sobre los del
@@ -72,7 +74,7 @@ export function ServiceForm({
             minLength={2}
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="Depilación definitiva"
+            placeholder={ejemplos.servicio}
             autoFocus={!service}
           />
 
@@ -178,7 +180,7 @@ export function ServiceForm({
             max={50}
             defaultValue={text("capacity", String(service?.capacity ?? 1))}
             className="w-32"
-            hint="Cuántas personas podés atender a la vez con este servicio. Si el aparato trabaja solo mientras atendés a otro cliente, poné 2 o 3. Un masaje es siempre 1."
+            hint={ejemplos.capacidad}
           />
         </CardBody>
       </Card>

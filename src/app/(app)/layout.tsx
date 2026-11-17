@@ -8,6 +8,7 @@ import { Recorrido } from "@/app/_components/guia/recorrido";
 import { getGuiaVista } from "@/lib/data/guia";
 import { getWhatsappCaido } from "@/lib/data/whatsapp";
 import { AvisoWhatsappCaido } from "@/app/_components/aviso-whatsapp-caido";
+import { RubroProvider } from "@/components/rubro/contexto";
 
 /**
  * El marco de las pantallas con sesión.
@@ -37,7 +38,7 @@ export default async function AppLayout({
   const whatsappCaido = membership ? await getWhatsappCaido(membership.tenant.id) : false;
 
   return (
-    <>
+    <RubroProvider rubro={membership?.tenant.rubro ?? "estetica"}>
       {membership && <Barra tenantName={membership.tenant.name} />}
       {membership && <Recorrido abrirSolo={guiaPendiente} />}
       {whatsappCaido && <AvisoWhatsappCaido />}
@@ -49,6 +50,6 @@ export default async function AppLayout({
       >
         {children}
       </MuroSuspension>
-    </>
+    </RubroProvider>
   );
 }

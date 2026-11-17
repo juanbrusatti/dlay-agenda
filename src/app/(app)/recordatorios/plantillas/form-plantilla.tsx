@@ -1,5 +1,6 @@
 "use client";
 
+import { useEjemplos } from "@/components/rubro/contexto";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -48,6 +49,7 @@ export function FormPlantilla({
   negocio: string;
 }) {
   const action = saveTemplate.bind(null, template?.id ?? null);
+  const ejemplos = useEjemplos();
   const [state, formAction] = useActionState(action, INITIAL);
   const [channel, setChannel] = useState<Channel>(template?.channel ?? "email");
   const [body, setBody] = useState(template?.body ?? "");
@@ -60,13 +62,10 @@ export function FormPlantilla({
     .replaceAll("{{fecha}}", "lunes, 14 de septiembre")
     .replaceAll("{{hora}}", "09:00")
     .replaceAll("{{cuando}}", "lunes, 14 de septiembre a las 09:00")
-    .replaceAll("{{servicio}}", "depilación definitiva")
+    .replaceAll("{{servicio}}", ejemplos.servicio.toLowerCase())
     .replaceAll("{{estetica}}", negocio)
     .replaceAll("{{link}}", "dlay.app/t/a1b2c3…")
-    .replaceAll(
-      "{{mensaje}}",
-      "No te depiles con cera ni pinza 15 días antes.",
-    );
+    .replaceAll("{{mensaje}}", ejemplos.indicacion);
 
   return (
     <form action={formAction} className="grid gap-4">

@@ -12,6 +12,7 @@ import { DemoRecordatorio } from "./demo-recordatorio";
 import { META_VISIBLE } from "@/lib/canal-whatsapp";
 import type { Rubro } from "@/lib/rubros";
 import { EJEMPLOS_PORTADA } from "./ejemplos";
+import { ContarVisita } from "./contar-visita";
 
 /** What changes on the home page for a rubro with its own page. */
 type Copia = {
@@ -100,6 +101,7 @@ export function Portada({ rubro = "estetica" }: { rubro?: Rubro }) {
 
   return (
     <div className="min-h-dvh">
+      <ContarVisita ruta={rubro === "psicologia" ? "/psicologos" : "/"} />
       <header className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
         <Imagotipo className="text-[26px]" />
         <Button asChild variant="outline" size="sm">

@@ -33,6 +33,25 @@ export async function getNegocios(): Promise<NegocioPlataforma[] | null> {
   return (data as unknown as NegocioPlataforma[]) ?? [];
 }
 
+export type VisitasPortada = {
+  ruta: "/" | "/psicologos";
+  hoy: number;
+  ayer: number;
+  semana: number;
+  mes: number;
+  total: number;
+  /** First day with a visit; null if none yet. */
+  desde: string | null;
+};
+
+/** Visits to the public home pages. Null if the panel can't read them. */
+export async function getVisitasPortada(): Promise<VisitasPortada[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("platform_visitas");
+  if (error) return null;
+  return (data as unknown as VisitasPortada[]) ?? [];
+}
+
 /**
  * El cartel de «pagá la cuenta», si Dlay lo levantó.
  *

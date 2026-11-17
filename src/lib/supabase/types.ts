@@ -2490,6 +2490,8 @@ export type Database = {
         Returns: Json
       }
       platform_auditoria: { Args: never; Returns: Json }
+      platform_visitas: { Args: never; Returns: Json }
+      registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
       platform_delete_tenant: {
         Args: { p_confirm: string; p_tenant: string }
         Returns: Json

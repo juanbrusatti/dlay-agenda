@@ -2490,6 +2490,15 @@ export type Database = {
         Returns: Json
       }
       platform_auditoria: { Args: never; Returns: Json }
+      cerrar_dia: {
+        Args: {
+          p_cobrar: string[]
+          p_faltaron: string[]
+          p_metodo?: Database["public"]["Enums"]["payment_method"]
+          p_vinieron: string[]
+        }
+        Returns: Json
+      }
       platform_visitas: { Args: never; Returns: Json }
       registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
       platform_delete_tenant: {

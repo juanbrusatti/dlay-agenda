@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentTenant } from "@/lib/auth/tenant";
+import { porCerrar } from "@/lib/cierre";
 import { getDay, getWeekCounts } from "@/lib/data/agenda";
 import { todayIn, weekOf } from "@/lib/tz";
 import { EnVivo } from "./_components/en-vivo";
@@ -31,6 +32,8 @@ export default async function AgendaPage({
 
   const activos = appointments.filter((a) => a.status !== "cancelled");
   const cancelados = appointments.length - activos.length;
+  // The closing button shows up only when there is something to close.
+  const sinCerrar = porCerrar(appointments, new Date()).length;
 
   return (
     <>
@@ -52,7 +55,14 @@ export default async function AgendaPage({
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {sinCerrar > 0 && (
+              <Button asChild variant="outline">
+                <Link href={`/agenda/cerrar?dia=${date}`}>
+                  Cerrar el día ({sinCerrar})
+                </Link>
+              </Button>
+            )}
             <Button asChild variant="outline">
               <Link href={`/agenda/bloquear?dia=${date}`}>Bloquear</Link>
             </Button>

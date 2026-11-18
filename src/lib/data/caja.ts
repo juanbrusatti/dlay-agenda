@@ -185,3 +185,27 @@ export async function getAppointmentCharges(
 
   return { paidCents, movements };
 }
+
+/**
+ * What was already charged for each of these appointments (income minus
+ * reversals), for screens that list several at once. Missing ids are 0.
+ */
+export async function getPaidByAppointment(
+  appointmentIds: string[],
+): Promise<Record<string, number>> {
+  if (appointmentIds.length === 0) return {};
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("cash_movements")
+    .select("appointment_id, kind, amount_cents")
+    .in("appointment_id", appointmentIds);
+
+  const paid: Record<string, number> = {};
+  for (const m of data ?? []) {
+    if (!m.appointment_id) continue;
+    paid[m.appointment_id] =
+      (paid[m.appointment_id] ?? 0) +
+      (m.kind === "income" ? 1 : -1) * Number(m.amount_cents);
+  }
+  return paid;
+}

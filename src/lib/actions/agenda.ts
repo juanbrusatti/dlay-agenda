@@ -216,3 +216,63 @@ export async function deleteBlock(id: string) {
   await supabase.from("agenda_blocks").delete().eq("id", id);
   revalidatePath("/agenda");
 }
+
+export type CierreDia = {
+  error: string | null;
+  resumen?: { vinieron: number; faltaron: number; cobrados: number; totalCents: number };
+};
+
+const cierreSchema = z.object({
+  vinieron: z.array(z.string().uuid()),
+  faltaron: z.array(z.string().uuid()),
+  cobrar: z.array(z.string().uuid()),
+  metodo: z.enum(["cash", "transfer", "debit", "credit", "mercadopago", "other"]),
+});
+
+/**
+ * Closes the day: marks who came and who did not, and charges what is still
+ * owed, all at once. The database does it in one transaction and recomputes
+ * each balance, so a repeated tap never charges twice.
+ */
+export async function cerrarDia(input: {
+  vinieron: string[];
+  faltaron: string[];
+  cobrar: string[];
+  metodo: string;
+}): Promise<CierreDia> {
+  const parsed = cierreSchema.safeParse(input);
+  if (!parsed.success) return { error: "Revisá los turnos marcados." };
+  if (parsed.data.vinieron.length + parsed.data.faltaron.length === 0) {
+    return { error: "No hay turnos para cerrar." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("cerrar_dia", {
+    p_vinieron: parsed.data.vinieron,
+    p_faltaron: parsed.data.faltaron,
+    p_cobrar: parsed.data.cobrar,
+    p_metodo: parsed.data.metodo,
+  });
+
+  if (error) {
+    // P0001 and 22023 carry a message written for the person using the app.
+    if (error.code === "P0001" || error.code === "22023") return { error: error.message };
+    if (error.code === "42501") {
+      return { error: "Sólo titulares, administración y recepción pueden cobrar." };
+    }
+    return { error: "No se pudo cerrar el día. Probá de nuevo en unos segundos." };
+  }
+
+  const r = data as { vinieron: number; faltaron: number; cobrados: number; total_cents: number };
+  revalidatePath("/agenda");
+  revalidatePath("/caja");
+  return {
+    error: null,
+    resumen: {
+      vinieron: r.vinieron,
+      faltaron: r.faltaron,
+      cobrados: r.cobrados,
+      totalCents: Number(r.total_cents),
+    },
+  };
+}

@@ -9,6 +9,8 @@ import { getGuiaVista } from "@/lib/data/guia";
 import { getWhatsappCaido } from "@/lib/data/whatsapp";
 import { AvisoWhatsappCaido } from "@/app/_components/aviso-whatsapp-caido";
 import { RubroProvider } from "@/components/rubro/contexto";
+import { Novedades } from "@/app/_components/novedades";
+import { getNovedadesPendientes } from "@/lib/data/novedades";
 
 /**
  * El marco de las pantallas con sesión.
@@ -36,11 +38,14 @@ export default async function AppLayout({
   // creado: antes no hay menú que mostrar.
   const guiaPendiente = membership ? !(await getGuiaVista()) : false;
   const whatsappCaido = membership ? await getWhatsappCaido(membership.tenant.id) : false;
+  // Never on top of the welcome tour: that one goes first.
+  const novedades = membership && !guiaPendiente ? await getNovedadesPendientes() : false;
 
   return (
     <RubroProvider rubro={membership?.tenant.rubro ?? "estetica"}>
       {membership && <Barra tenantName={membership.tenant.name} />}
       {membership && <Recorrido abrirSolo={guiaPendiente} />}
+      {novedades && <Novedades />}
       {whatsappCaido && <AvisoWhatsappCaido />}
       {suscripcion && paga && <AvisoSuscripcion s={suscripcion} />}
       <MuroSuspension

@@ -115,6 +115,12 @@ export async function createClientAction(
   if (error) return { error: friendly(error.code), values: echo(formData) };
 
   revalidatePath("/clientes");
+
+  // Created from «Agendar turno»: go back to booking, with this client chosen.
+  const agendarEl = String(formData.get("agendarEl") ?? "");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(agendarEl)) {
+    redirect(`/agenda/nuevo?dia=${agendarEl}&cliente=${data.id}`);
+  }
   redirect(`/clientes/${data.id}`);
 }
 

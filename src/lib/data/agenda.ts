@@ -213,3 +213,24 @@ export const STATUS_LABELS: Record<AppointmentStatus, string> = {
   no_show: "No vino",
   cancelled: "Cancelado",
 };
+
+/**
+ * The services of the client's latest appointment that was not cancelled, in
+ * the order they were booked. Used to pre-select «lo de siempre» when booking
+ * again; empty for a first visit.
+ */
+export async function getLastServiceIds(clientId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("appointments")
+    .select("services:appointment_services ( service_id, position )")
+    .eq("client_id", clientId)
+    .neq("status", "cancelled")
+    .order("starts_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (data?.services ?? [])
+    .sort((a, b) => a.position - b.position)
+    .map((s) => s.service_id);
+}

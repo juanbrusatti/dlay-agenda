@@ -4,6 +4,7 @@ import { Buscador } from "@/app/(app)/clientes/_components/buscador";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCurrentTenant } from "@/lib/auth/tenant";
+import { getLastServiceIds } from "@/lib/data/agenda";
 import { fullName, getClient, searchClients } from "@/lib/data/clients";
 import { listServices } from "@/lib/data/services";
 import { formatPhone } from "@/lib/phone";
@@ -27,13 +28,16 @@ export default async function NuevoTurnoPage({
 
   // Paso 2: ya sabemos para quién es.
   if (cliente) {
-    const [client, services] = await Promise.all([
+    const [client, services, ultimos] = await Promise.all([
       getClient(cliente),
       listServices(),
+      getLastServiceIds(cliente),
     ]);
 
     if (client) {
       const activos = services.filter((s) => s.is_active);
+      // «Lo de siempre»: what they had last time, if those services still exist.
+      const deSiempre = ultimos.filter((id) => activos.some((s) => s.id === id));
 
       return (
         <>
@@ -61,6 +65,7 @@ export default async function NuevoTurnoPage({
                 clientName={fullName(client)}
                 services={activos}
                 date={date}
+                deSiempre={deSiempre}
               />
             )}
           </main>
@@ -87,7 +92,11 @@ export default async function NuevoTurnoPage({
         <div className="flex items-center gap-3">
           <Buscador initial={q} />
           <Button asChild variant="outline">
-            <Link href="/clientes/nuevo">Nueva ficha</Link>
+            <Link
+              href={`/clientes/nuevo?agendar=${date}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            >
+              Nueva ficha
+            </Link>
           </Button>
         </div>
 

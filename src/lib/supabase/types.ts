@@ -1563,6 +1563,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           guide_seen_at: string | null
+          novedades_vistas: string | null
           id: string
           updated_at: string
         }
@@ -1571,6 +1572,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           guide_seen_at?: string | null
+          novedades_vistas?: string | null
           id: string
           updated_at?: string
         }
@@ -1579,6 +1581,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           guide_seen_at?: string | null
+          novedades_vistas?: string | null
           id?: string
           updated_at?: string
         }

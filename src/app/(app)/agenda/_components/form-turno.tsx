@@ -26,11 +26,14 @@ export function FormTurno({
   clientName,
   services,
   date,
+  deSiempre = [],
 }: {
   clientId: string;
   clientName: string;
   services: ServiceWithCategory[];
   date: string;
+  /** Services of the client's last appointment, pre-selected. */
+  deSiempre?: string[];
 }) {
   const [state, formAction] = useActionState(createAppointment, INITIAL);
   const sent = state.values;
@@ -54,7 +57,13 @@ export function FormTurno({
       <Card>
         <CardBody className="grid gap-4">
           <CardTitle>¿Qué se le hace?</CardTitle>
-          <SelectorServicios services={services} />
+          {deSiempre.length > 0 && (
+            <p className="-mt-2 text-[13px] leading-snug text-muted">
+              Ya viene marcado lo de su último turno. Si hoy es otra cosa,
+              tocalo para sacarlo y elegí lo que corresponda.
+            </p>
+          )}
+          <SelectorServicios services={services} defaultSelected={deSiempre} />
         </CardBody>
       </Card>
 

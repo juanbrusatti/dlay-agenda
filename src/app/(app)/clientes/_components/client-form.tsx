@@ -28,10 +28,16 @@ export function ClientForm({
   action,
   client,
   submitLabel,
+  sugerido,
+  agendarEl,
 }: {
   action: (prev: FormState, data: FormData) => Promise<FormState>;
   client?: Client;
   submitLabel: string;
+  /** Pre-fills a new record, e.g. with what was typed in a search. */
+  sugerido?: { firstName?: string; lastName?: string; phoneRaw?: string };
+  /** When set (a YYYY-MM-DD day), saving goes straight to booking that day. */
+  agendarEl?: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
 
@@ -39,7 +45,7 @@ export function ClientForm({
   const text = (key: string, fallback: string) => sent?.[key] ?? fallback;
 
   const [phoneRaw, setPhoneRaw] = useState(
-    text("phoneRaw", client?.phone_raw ?? ""),
+    text("phoneRaw", client?.phone_raw ?? sugerido?.phoneRaw ?? ""),
   );
   const [isLandline, setIsLandline] = useState(
     sent ? sent.isLandline === "on" : false,
@@ -53,6 +59,7 @@ export function ClientForm({
 
   return (
     <form action={formAction} className="grid gap-4">
+      {agendarEl && <input type="hidden" name="agendarEl" value={agendarEl} />}
       <Card>
         <CardBody className="grid gap-5 sm:grid-cols-2">
           <Field
@@ -60,13 +67,13 @@ export function ClientForm({
             name="firstName"
             required
             autoFocus={!client}
-            defaultValue={text("firstName", client?.first_name ?? "")}
+            defaultValue={text("firstName", client?.first_name ?? sugerido?.firstName ?? "")}
             placeholder="Mirián"
           />
           <Field
             label="Apellido"
             name="lastName"
-            defaultValue={text("lastName", client?.last_name ?? "")}
+            defaultValue={text("lastName", client?.last_name ?? sugerido?.lastName ?? "")}
             placeholder="Ortiz"
           />
         </CardBody>
@@ -181,7 +188,15 @@ export function ClientForm({
       <div className="flex flex-wrap items-center gap-2">
         <Submit label={submitLabel} />
         <Button asChild variant="ghost" size="lg">
-          <Link href={client ? `/clientes/${client.id}` : "/clientes"}>
+          <Link
+            href={
+              client
+                ? `/clientes/${client.id}`
+                : agendarEl
+                  ? `/agenda/nuevo?dia=${agendarEl}`
+                  : "/clientes"
+            }
+          >
             Cancelar
           </Link>
         </Button>

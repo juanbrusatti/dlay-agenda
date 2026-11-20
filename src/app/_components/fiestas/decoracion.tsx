@@ -16,6 +16,8 @@
  * the browser draw the same thing.
  */
 
+import { Arbolito } from "./arbolito";
+
 const COPOS = Array.from({ length: 18 }, (_, i) => ({
   left: (i * 37 + 11) % 100,
   size: 3 + ((i * 7) % 4),
@@ -58,11 +60,27 @@ const CSS = `
   4%       { transform: translate(70vw, 6px); }
   6%, 100% { transform: translate(calc(100vw + 40px), -10px); }
 }
+/* The tree: in the bottom-right margin on wide screens, behind the cards;
+   in the bar, next to the business name, where there is no margin. */
+.fiestas-arbol {
+  position: fixed; right: 28px; bottom: 18px; z-index: -1; width: 86px; pointer-events: none;
+  display: none;
+}
+.fiestas-arbol-barra { display: inline-block; width: 15px; height: 20px; flex-shrink: 0; }
+@media (min-width: 1180px) {
+  .fiestas-arbol { display: block; }
+  .fiestas-arbol-barra { display: none; }
+}
+.fiestas-luz { animation: fiestas-titilar 2.8s ease-in-out infinite; }
+.fiestas-luz-2 { animation-delay: -0.9s; }
+.fiestas-luz-3 { animation-delay: -1.8s; }
+@keyframes fiestas-titilar { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 @media (prefers-reduced-motion: reduce) {
   .fiestas-nieve, .fiestas-noel, .fiestas-trineo { display: none; }
+  .fiestas-luz { animation: none; }
 }
 @media print {
-  .fiestas-nieve, .fiestas-noel, .fiestas-trineo { display: none; }
+  .fiestas-nieve, .fiestas-noel, .fiestas-trineo, .fiestas-arbol { display: none; }
 }
 `;
 
@@ -138,6 +156,7 @@ export function DecoracionFiestas() {
       </div>
       <Noel />
       <Trineo />
+      <Arbolito className="fiestas-arbol" />
     </>
   );
 }

@@ -6,19 +6,34 @@
  * after `desde` never see it, since everything is new to them anyway.
  */
 export const NOVEDADES = {
-  clave: "2026-11-agendar-rapido",
-  desde: "2026-11-19T12:00:00Z",
-  titulo: "Dos novedades para agendar más rápido",
+  clave: "2026-11-menos-pasos",
+  desde: "2026-11-20T15:00:00Z",
+  titulo: "Novedades para ahorrarte pasos",
   items: [
     {
-      titulo: "Cliente nuevo sin salir del turno",
+      titulo: "El próximo turno, en un toque",
       texto:
-        "Al agendar, si la persona no está cargada, tocá «Nueva ficha»: al guardarla volvés directo al turno con ella ya elegida. Y si la habías buscado por nombre o teléfono, ya viene escrito.",
+        "Cuando marcás «Vino y se atendió», te sugiere el próximo turno según cada cuánto viene esa persona. Lo tocás y queda listo para guardar.",
     },
     {
-      titulo: "Lo de siempre, ya marcado",
+      titulo: "Agendar en un hueco libre",
       texto:
-        "Al agendarle a alguien que ya vino, aparece marcado el servicio de su último turno. Si hoy es otra cosa, lo cambiás con un toque.",
+        "En la agenda aparecen los ratos libres del día. Tocá «Agendar acá» y el turno se abre con ese día y esa hora.",
+    },
+    {
+      titulo: "Abrir la caja sin salir del cobro",
+      texto:
+        "Si vas a cobrar en efectivo con la caja cerrada, la abrís ahí mismo, sin perder lo que estabas haciendo.",
+    },
+    {
+      titulo: "Turnos sin cerrar, a la vista",
+      texto:
+        "Si quedó algún día sin marcar quién vino, te avisa en Inicio. Tocás el día y lo cerrás todo junto.",
+    },
+    {
+      titulo: "Clientes para recuperar",
+      texto:
+        "En Clientes, «Para recuperar» te muestra a quienes hace tiempo que no vienen. «Escribirle» abre WhatsApp con un mensaje listo.",
     },
   ],
 } as const;

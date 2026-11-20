@@ -11,6 +11,8 @@ import { AvisoWhatsappCaido } from "@/app/_components/aviso-whatsapp-caido";
 import { RubroProvider } from "@/components/rubro/contexto";
 import { Novedades } from "@/app/_components/novedades";
 import { getNovedadesPendientes } from "@/lib/data/novedades";
+import { ColoresFiestas } from "@/app/_components/fiestas/colores";
+import { DecoracionFiestas } from "@/app/_components/fiestas/decoracion";
 
 /**
  * El marco de las pantallas con sesión.
@@ -43,6 +45,13 @@ export default async function AppLayout({
 
   return (
     <RubroProvider rubro={membership?.tenant.rubro ?? "estetica"}>
+      {/* Seasonal look, only for the accounts Dlay turned it on for. */}
+      {membership?.tenant.tema === "fiestas" && (
+        <>
+          <ColoresFiestas />
+          <DecoracionFiestas />
+        </>
+      )}
       {membership && <Barra tenantName={membership.tenant.name} />}
       {membership && <Recorrido abrirSolo={guiaPendiente} />}
       {novedades && <Novedades />}

@@ -7,6 +7,7 @@ import { getSinVer } from "@/lib/data/mensajes";
 import { AvisoMensajes } from "./aviso-mensajes";
 import { META_VISIBLE } from "@/lib/canal-whatsapp";
 import { NavLink } from "./nav-link";
+import { GorroFiestas } from "./fiestas/gorro";
 
 /**
  * Barra superior en píldora flotante. Los módulos se van sumando acá a medida
@@ -36,7 +37,10 @@ export async function Barra({ tenantName }: { tenantName: string }) {
           className="flex min-w-0 flex-1 items-center gap-2.5 lg:flex-initial"
           aria-label={`${tenantName}, ir al inicio`}
         >
-          <Logo className="h-8 w-8 shrink-0" />
+          <span className="relative block shrink-0">
+            <Logo className="h-8 w-8" />
+            {membership?.tenant.tema === "fiestas" && <GorroFiestas />}
+          </span>
           <span className="truncate text-[14.5px] font-semibold">
             {tenantName}
           </span>

@@ -35,7 +35,7 @@ export function Novedades() {
       aria-labelledby="novedades-titulo"
     >
       <div aria-hidden className="fixed inset-0" style={{ background: "rgb(10 10 25 / 0.55)" }} />
-      <div className="relative grid w-full max-w-md gap-4 rounded-card border-[1.5px] border-line bg-surface p-5 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]">
+      <div className="relative grid max-h-[calc(100dvh-2rem)] w-full max-w-md gap-4 overflow-y-auto rounded-card border-[1.5px] border-line bg-surface p-5 shadow-[0_12px_40px_-12px_rgb(0_0_0/0.45)]">
         <div className="grid gap-1">
           <p className="font-hand text-[26px] leading-none text-accent-text">Novedades</p>
           <p id="novedades-titulo" className="text-[18px] font-bold leading-tight tracking-[-0.02em]">

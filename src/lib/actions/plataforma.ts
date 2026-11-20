@@ -24,7 +24,8 @@ async function llamar(
   | "platform_set_billing"
   | "platform_set_month_amount"
   | "platform_nudge"
-  | "platform_pago_suscripcion",
+  | "platform_pago_suscripcion"
+  | "platform_set_tema",
   args: Record<string, unknown>,
   exito: string,
 ): Promise<PlataformaState> {
@@ -303,4 +304,22 @@ async function desvincularWhatsapp(tenantId: string): Promise<void> {
     // El borrado del negocio no depende de esto: la sesión se va con él y el
     // servidor deja de restaurarla al reiniciarse.
   }
+}
+
+/**
+ * Turns the «fiestas» look on or off for one account. Only that account
+ * changes; the rest keep the usual look.
+ */
+export async function cambiarTema(
+  tenantId: string,
+  tema: "fiestas" | null,
+): Promise<PlataformaState> {
+  const r = await llamar(
+    "platform_set_tema",
+    { p_tenant: tenantId, p_tema: tema },
+    tema ? "Modo fiestas activado." : "Modo fiestas desactivado.",
+  );
+  // The account's own screens read it on every visit; this refreshes this one.
+  if (!r.error) revalidatePath("/", "layout");
+  return r;
 }

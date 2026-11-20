@@ -4,13 +4,22 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 import { rubroDe, type Rubro } from "@/lib/rubros";
+import { temaDe, type Tema } from "@/lib/temas";
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
 export type Membership = {
   tenantId: string;
   role: AppRole;
-  tenant: { id: string; name: string; slug: string; timezone: string; rubro: Rubro };
+  tenant: {
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+    rubro: Rubro;
+    /** Seasonal look, if Dlay turned one on for this account. */
+    tema: Tema | null;
+  };
 };
 
 /**
@@ -33,7 +42,7 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
 
   const { data, error } = await supabase
     .from("memberships")
-    .select("tenant_id, role, tenants ( id, name, slug, timezone, rubro )")
+    .select("tenant_id, role, tenants ( id, name, slug, timezone, rubro, tema )")
     .eq("status", "active");
 
   if (error) throw error;
@@ -44,8 +53,9 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
       tenantId: row.tenant_id,
       role: row.role,
       tenant: {
-        ...(row.tenants as Omit<Membership["tenant"], "rubro">),
+        ...(row.tenants as Omit<Membership["tenant"], "rubro" | "tema">),
         rubro: rubroDe((row.tenants as { rubro?: string }).rubro),
+        tema: temaDe((row.tenants as { tema?: string | null }).tema),
       },
     }));
 });

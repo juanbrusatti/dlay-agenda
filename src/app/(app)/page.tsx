@@ -66,6 +66,14 @@ export default async function InicioPage() {
           <p className="font-hand text-[42px] leading-none text-accent-text">
             Hola {nombre}
           </p>
+          {membership.tenant.tema === "fiestas" && (
+            <p
+              className="mt-1 font-hand text-[24px] leading-none"
+              style={{ color: "var(--fiesta-rojo)" }}
+            >
+              ¡Felices fiestas!
+            </p>
+          )}
           <p className="mt-1.5 text-[15px] text-muted">
             Acá tenés lo de hoy y los accesos rápidos a todo lo demás.
           </p>

@@ -2037,6 +2037,7 @@ export type Database = {
           name: string
           rubro: string
           slug: string
+          tema: string | null
           status: string
           timezone: string
           updated_at: string
@@ -2049,6 +2050,7 @@ export type Database = {
           name: string
           rubro?: string
           slug: string
+          tema?: string | null
           status?: string
           timezone?: string
           updated_at?: string
@@ -2061,6 +2063,7 @@ export type Database = {
           name?: string
           rubro?: string
           slug?: string
+          tema?: string | null
           status?: string
           timezone?: string
           updated_at?: string
@@ -2504,6 +2507,11 @@ export type Database = {
       }
       platform_visitas: { Args: never; Returns: Json }
       registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
+      platform_temas: { Args: never; Returns: Json }
+      platform_set_tema: {
+        Args: { p_tenant: string; p_tema: string | null }
+        Returns: Json
+      }
       clientes_para_recuperar: {
         Args: { p_tenant: string; p_dias?: number }
         Returns: {

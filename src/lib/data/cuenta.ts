@@ -80,3 +80,13 @@ export async function getSuscripciones(): Promise<
   const { data } = await supabase.rpc("platform_suscripciones");
   return (data as never) ?? null;
 }
+
+export type TemaCuenta = { tenant_id: string; nombre: string; tema: string | null };
+
+/** Seasonal look of every account, for the panel. Null if it can't read them. */
+export async function getTemas(): Promise<TemaCuenta[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("platform_temas");
+  if (error) return null;
+  return (data as unknown as TemaCuenta[]) ?? [];
+}

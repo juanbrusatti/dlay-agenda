@@ -385,9 +385,11 @@ describe("qué puede ejecutar un visitante sin sesión", () => {
     "booking_reschedule",
     "booking_slots",
     "booking_subscribe_push",
+    // Counts visits to the public home pages; only adds one to a daily total.
+    "registrar_visita",
   ];
 
-  it("sólo las nueve funciones de la reserva pública", async () => {
+  it("sólo las de la reserva pública y el contador de visitas", async () => {
     await asAdmin(async (c) => {
       const { rows } = await c.query(
         `select p.proname

@@ -121,7 +121,12 @@ export function formatPhone(e164: string | null | undefined): string | null {
 }
 
 /** Enlace para abrir el chat. WhatsApp espera el número sin el "+". */
-export function whatsappLink(e164: string | null | undefined): string | null {
+export function whatsappLink(
+  e164: string | null | undefined,
+  /** Optional message to open the chat with, ready to edit and send. */
+  texto?: string,
+): string | null {
   if (!e164) return null;
-  return `https://wa.me/${e164.replace(/\D/g, "")}`;
+  const base = `https://wa.me/${e164.replace(/\D/g, "")}`;
+  return texto ? `${base}?text=${encodeURIComponent(texto)}` : base;
 }

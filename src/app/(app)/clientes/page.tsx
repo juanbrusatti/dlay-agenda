@@ -39,7 +39,10 @@ export default async function ClientesPage({
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href="/clientes/recuperar">Para recuperar</Link>
+            </Button>
             <Button asChild variant="outline">
               <Link href="/clientes/importar">Importar</Link>
             </Button>

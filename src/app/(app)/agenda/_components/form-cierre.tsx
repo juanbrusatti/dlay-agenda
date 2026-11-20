@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { AbrirCajaAca } from "@/app/(app)/caja/_components/abrir-aca";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -205,15 +206,7 @@ export function FormCierre({
         </div>
       )}
 
-      {faltaCaja && (
-        <p className="rounded-[14px] bg-warn-wash px-3.5 py-2.5 text-[13px] leading-snug text-ink">
-          No hay una caja abierta, así que el efectivo todavía no se puede
-          registrar.{" "}
-          <Link href="/caja" className="font-medium underline">
-            Abrir la caja
-          </Link>
-        </p>
-      )}
+      {faltaCaja && <AbrirCajaAca />}
 
       {resultado?.error && (
         <p role="alert" className="rounded-[14px] bg-danger-wash px-3.5 py-2.5 text-[13.5px] text-danger">

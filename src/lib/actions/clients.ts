@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { esDia, linkAgendar } from "@/lib/agendar";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { normalizePhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
@@ -118,8 +119,9 @@ export async function createClientAction(
 
   // Created from «Agendar turno»: go back to booking, with this client chosen.
   const agendarEl = String(formData.get("agendarEl") ?? "");
-  if (/^\d{4}-\d{2}-\d{2}$/.test(agendarEl)) {
-    redirect(`/agenda/nuevo?dia=${agendarEl}&cliente=${data.id}`);
+  if (esDia(agendarEl)) {
+    const hora = String(formData.get("agendarA") ?? "");
+    redirect(linkAgendar({ dia: agendarEl, hora, cliente: data.id }));
   }
   redirect(`/clientes/${data.id}`);
 }

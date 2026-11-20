@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Toggle } from "@/components/ui/toggle";
+import { linkAgendar } from "@/lib/agendar";
 import { normalizePhone } from "@/lib/phone";
 import type { FormState } from "@/lib/actions/clients";
 import type { Client } from "@/lib/data/clients";
@@ -30,6 +31,7 @@ export function ClientForm({
   submitLabel,
   sugerido,
   agendarEl,
+  agendarA,
 }: {
   action: (prev: FormState, data: FormData) => Promise<FormState>;
   client?: Client;
@@ -38,6 +40,8 @@ export function ClientForm({
   sugerido?: { firstName?: string; lastName?: string; phoneRaw?: string };
   /** When set (a YYYY-MM-DD day), saving goes straight to booking that day. */
   agendarEl?: string;
+  /** And the time already picked for it, if any. */
+  agendarA?: string;
 }) {
   const [state, formAction] = useActionState(action, INITIAL);
 
@@ -60,6 +64,9 @@ export function ClientForm({
   return (
     <form action={formAction} className="grid gap-4">
       {agendarEl && <input type="hidden" name="agendarEl" value={agendarEl} />}
+      {agendarEl && agendarA && (
+        <input type="hidden" name="agendarA" value={agendarA} />
+      )}
       <Card>
         <CardBody className="grid gap-5 sm:grid-cols-2">
           <Field
@@ -193,7 +200,7 @@ export function ClientForm({
               client
                 ? `/clientes/${client.id}`
                 : agendarEl
-                  ? `/agenda/nuevo?dia=${agendarEl}`
+                  ? linkAgendar({ dia: agendarEl, hora: agendarA })
                   : "/clientes"
             }
           >

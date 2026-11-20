@@ -7,6 +7,7 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import {
   STATUS_LABELS,
   getAppointment,
+  getRitmo,
   getStatusHistory,
 } from "@/lib/data/agenda";
 import { getAppointmentCharges, getOpenSession } from "@/lib/data/caja";
@@ -15,6 +16,7 @@ import { whatsappLink } from "@/lib/phone";
 import { longDateIn, timeIn } from "@/lib/tz";
 import { AccionesEstado } from "../_components/acciones-estado";
 import { Cobro } from "../_components/cobro";
+import { ProximoTurno } from "../_components/proximo-turno";
 
 export const metadata: Metadata = { title: "Turno" };
 
@@ -41,6 +43,12 @@ export default async function TurnoPage({
     : [null, null];
 
   const cliente = appointment.client;
+
+  // Right after «vino»: offer the next visit, unless it is already booked.
+  const ritmo =
+    appointment.status === "attended" && cliente
+      ? await getRitmo(cliente.id, appointment.starts_at)
+      : null;
   const nombre = cliente
     ? [cliente.first_name, cliente.last_name].filter(Boolean).join(" ")
     : "Sin cliente";
@@ -159,6 +167,17 @@ export default async function TurnoPage({
             />
           </CardBody>
         </Card>
+
+        {ritmo && cliente && !ritmo.yaTieneProximo && (
+          <ProximoTurno
+            clientId={cliente.id}
+            dia={dia}
+            hora={timeIn(appointment.starts_at, tz)}
+            diasDesdeAnterior={ritmo.diasDesdeAnterior}
+            rubro={membership.tenant.rubro}
+            timeZone={tz}
+          />
+        )}
 
         <Card>
           <CardBody className="grid gap-3">

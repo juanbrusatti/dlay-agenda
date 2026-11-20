@@ -9,6 +9,8 @@ import { Card, CardBody, CardFigure, CardTitle } from "@/components/ui/card";
 import { atLeast, getCurrentTenant, getCurrentUser } from "@/lib/auth/tenant";
 import { getPrimerosPasos } from "@/lib/data/guia";
 import { PrimerosPasos } from "./_components/primeros-pasos";
+import { SinCerrar } from "./_components/sin-cerrar";
+import { getDiasSinCerrar } from "@/lib/data/agenda";
 import { getCartel } from "@/lib/data/cuenta";
 import { getPublicLink } from "@/lib/data/reserva";
 import { publicEnv } from "@/lib/env";
@@ -48,9 +50,12 @@ export default async function InicioPage() {
 
   // Los primeros pasos son de quien arma el negocio. A recepción o a un
   // profesional no le toca conectar WhatsApp ni cargar precios.
-  const pasos = atLeast(membership.role, "admin")
-    ? await getPrimerosPasos(membership.tenantId)
-    : null;
+  const [pasos, sinCerrar] = await Promise.all([
+    atLeast(membership.role, "admin")
+      ? getPrimerosPasos(membership.tenantId)
+      : null,
+    getDiasSinCerrar(membership.tenant.timezone),
+  ]);
 
   return (
     <>
@@ -73,6 +78,8 @@ export default async function InicioPage() {
         {cartel && <CartelCuenta cartel={cartel} />}
 
         {pasos && <PrimerosPasos pasos={pasos} />}
+
+        <SinCerrar dias={sinCerrar} timeZone={membership.tenant.timezone} />
 
         {/*
           Va arriba a propósito: instalar la aplicación y prender los avisos son

@@ -2504,6 +2504,18 @@ export type Database = {
       }
       platform_visitas: { Args: never; Returns: Json }
       registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
+      clientes_para_recuperar: {
+        Args: { p_tenant: string; p_dias?: number }
+        Returns: {
+          id: string
+          first_name: string
+          last_name: string | null
+          phone_e164: string | null
+          ultima_visita: string
+          ultimo_servicio: string | null
+          visitas: number
+        }[]
+      }
       platform_delete_tenant: {
         Args: { p_confirm: string; p_tenant: string }
         Returns: Json

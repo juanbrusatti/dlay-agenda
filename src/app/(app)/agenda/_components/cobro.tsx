@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
+import { AbrirCajaAca } from "@/app/(app)/caja/_components/abrir-aca";
 import { registrarMovimiento, type FormState } from "@/lib/actions/caja";
 import { METHODS, METHOD_LABELS, type PaymentMethod } from "@/lib/caja";
 import { centsToInput, formatPrice, parsePriceToCents } from "@/lib/money";
@@ -131,15 +131,7 @@ function Formulario({
         hint="Es lo que vas a ver en la caja."
       />
 
-      {faltaCaja && (
-        <p className="rounded-[14px] bg-warn-wash px-3.5 py-2.5 text-[13px] leading-snug text-ink">
-          No hay una caja abierta, así que el efectivo todavía no se puede
-          registrar.{" "}
-          <Link href="/caja" className="font-medium underline">
-            Abrir la caja
-          </Link>
-        </p>
-      )}
+      {faltaCaja && <AbrirCajaAca />}
 
       {state.error && (
         <p

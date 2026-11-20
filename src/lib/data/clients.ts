@@ -125,3 +125,23 @@ export async function listTagIdsFor(clientId: string): Promise<string[]> {
 export function fullName(c: Pick<Client, "first_name" | "last_name">): string {
   return [c.last_name, c.first_name].filter(Boolean).join(", ") || c.first_name;
 }
+
+export type ParaRecuperar =
+  Database["public"]["Functions"]["clientes_para_recuperar"]["Returns"][number];
+
+/**
+ * Clients who came before, have not been back in `dias` days and have nothing
+ * booked, most recent first (the easiest to win back). At most 200.
+ */
+export async function getParaRecuperar(
+  tenantId: string,
+  dias: number,
+): Promise<ParaRecuperar[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("clientes_para_recuperar", {
+    p_tenant: tenantId,
+    p_dias: dias,
+  });
+  if (error) throw error;
+  return data ?? [];
+}

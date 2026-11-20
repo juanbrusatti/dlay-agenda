@@ -98,3 +98,11 @@ export function weekOf(date: string): string[] {
   const offset = (ref.getUTCDay() + 6) % 7;
   return Array.from({ length: 7 }, (_, i) => nextDay(date, i - offset));
 }
+
+/**
+ * "jue, 19 de noviembre" → "Jue, 19 de noviembre". The CSS `capitalize` would
+ * also turn «de» into «De».
+ */
+export function conMayuscula(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}

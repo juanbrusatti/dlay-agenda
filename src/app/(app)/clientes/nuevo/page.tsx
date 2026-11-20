@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { createClientAction } from "@/lib/actions/clients";
+import { esDia, esHoraAgendable } from "@/lib/agendar";
 import { ClientForm } from "../_components/client-form";
 
 export const metadata: Metadata = { title: "Nueva ficha" };
@@ -20,14 +21,15 @@ function sugerencia(q: string) {
 export default async function NuevoClientePage({
   searchParams,
 }: {
-  searchParams: Promise<{ agendar?: string; q?: string }>;
+  searchParams: Promise<{ agendar?: string; hora?: string; q?: string }>;
 }) {
   const membership = await getCurrentTenant();
   if (!membership) return null;
 
-  const { agendar, q = "" } = await searchParams;
+  const { agendar, hora, q = "" } = await searchParams;
   // Coming from «Agendar turno»: the day to go back to after saving.
-  const agendarEl = /^\d{4}-\d{2}-\d{2}$/.test(agendar ?? "") ? agendar : undefined;
+  const agendarEl = esDia(agendar) ? agendar : undefined;
+  const agendarA = agendarEl && esHoraAgendable(hora) ? hora : undefined;
 
   return (
     <>
@@ -40,6 +42,7 @@ export default async function NuevoClientePage({
           submitLabel={agendarEl ? "Crear y agendar turno" : "Crear ficha"}
           sugerido={sugerencia(q)}
           agendarEl={agendarEl}
+          agendarA={agendarA}
         />
       </main>
     </>

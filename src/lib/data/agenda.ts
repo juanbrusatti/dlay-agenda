@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
-import { zonedDayRange } from "@/lib/tz";
+import { todayIn, zonedDayRange } from "@/lib/tz";
 
 export type Appointment = Database["public"]["Tables"]["appointments"]["Row"];
 export type AppointmentStatus =
@@ -233,4 +233,95 @@ export async function getLastServiceIds(clientId: string): Promise<string[]> {
   return (data?.services ?? [])
     .sort((a, b) => a.position - b.position)
     .map((s) => s.service_id);
+}
+
+export type Ritmo = {
+  /** Already has something booked after this appointment. */
+  yaTieneProximo: boolean;
+  /** Days between the visit before this one and this one, if there was one. */
+  diasDesdeAnterior: number | null;
+};
+
+/**
+ * What «el próximo turno» needs after a visit: whether the client already has
+ * the next one booked, and how far apart their last two visits were, so the
+ * suggestion follows their own rhythm.
+ */
+export async function getRitmo(clientId: string, startsAt: string): Promise<Ritmo> {
+  const supabase = await createClient();
+
+  const [siguiente, anterior] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id")
+      .eq("client_id", clientId)
+      .gt("starts_at", startsAt)
+      .neq("status", "cancelled")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("appointments")
+      .select("starts_at")
+      .eq("client_id", clientId)
+      .lt("starts_at", startsAt)
+      .eq("status", "attended")
+      .order("starts_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  // Unsure means «already has one»: better to not offer it than to offer a
+  // second appointment to someone who already has the next one.
+  if (siguiente.error) return { yaTieneProximo: true, diasDesdeAnterior: null };
+
+  const dias = anterior.data
+    ? Math.round(
+        (new Date(startsAt).getTime() - new Date(anterior.data.starts_at).getTime()) /
+          86_400_000,
+      )
+    : null;
+
+  return { yaTieneProximo: siguiente.data !== null, diasDesdeAnterior: dias };
+}
+
+/**
+ * Past days that still have appointments nobody closed (pending or confirmed
+ * after they happened), most recent first, for the reminder on the home page.
+ *
+ * Today is left out: its appointments are still going on. Only the last 30
+ * days count, so a forgotten appointment from months ago does not nag forever.
+ */
+export async function getDiasSinCerrar(
+  timeZone: string,
+): Promise<Array<{ dia: string; cuantos: number }>> {
+  const hoy = todayIn(timeZone);
+  const desde = new Date(Date.now() - 30 * 86_400_000);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("starts_at")
+    .in("status", ["pending", "confirmed"])
+    .gte("starts_at", desde.toISOString())
+    .lt("starts_at", zonedDayRange(hoy, timeZone).from.toISOString());
+
+  // A reminder, not something to fail the home page over.
+  if (error) return [];
+
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const porDia = new Map<string, number>();
+  for (const row of data ?? []) {
+    const dia = formatter.format(new Date(row.starts_at));
+    porDia.set(dia, (porDia.get(dia) ?? 0) + 1);
+  }
+
+  return [...porDia.entries()]
+    .map(([dia, cuantos]) => ({ dia, cuantos }))
+    .sort((x, y) => (x.dia < y.dia ? 1 : -1));
 }

@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { porCerrar } from "@/lib/cierre";
 import { getDay, getWeekCounts } from "@/lib/data/agenda";
+import { getBusinessHours } from "@/lib/data/configuracion";
+import { aMinutos, huecosLibres, minutoDelDia } from "@/lib/huecos";
 import { todayIn, weekOf } from "@/lib/tz";
 import { EnVivo } from "./_components/en-vivo";
 import { ListaTurnos } from "./_components/lista-turnos";
@@ -25,15 +27,39 @@ export default async function AgendaPage({
   const tz = membership.tenant.timezone;
   const date = /^\d{4}-\d{2}-\d{2}$/.test(dia ?? "") ? dia! : todayIn(tz);
 
-  const [{ appointments, blocks }, counts] = await Promise.all([
+  const hoy = todayIn(tz);
+  const [{ appointments, blocks }, counts, horarios] = await Promise.all([
     getDay(date, tz),
     getWeekCounts(weekOf(date), tz),
+    // Free gaps are only offered from today on.
+    date >= hoy ? getBusinessHours() : [],
   ]);
 
   const activos = appointments.filter((a) => a.status !== "cancelled");
   const cancelados = appointments.length - activos.length;
   // The closing button shows up only when there is something to close.
   const sinCerrar = porCerrar(appointments, new Date()).length;
+
+  // Gaps to book into with one tap: opening hours of this weekday, minus
+  // what is booked or blocked, and from now on if it is today.
+  const [y, m, d] = date.split("-").map(Number);
+  const diaSemana = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const libres = huecosLibres({
+    abierto: horarios
+      .filter((h) => h.weekday === diaSemana)
+      .map((h) => ({ desde: aMinutos(h.opens_at), hasta: aMinutos(h.closes_at) })),
+    ocupado: [
+      ...activos.map((a) => ({
+        desde: minutoDelDia(a.starts_at, date, tz),
+        hasta: minutoDelDia(a.blocks_until, date, tz),
+      })),
+      ...blocks.map((b) => ({
+        desde: minutoDelDia(b.starts_at, date, tz),
+        hasta: minutoDelDia(b.ends_at, date, tz),
+      })),
+    ],
+    desde: date === hoy ? minutoDelDia(new Date(), date, tz) : 0,
+  });
 
   return (
     <>
@@ -94,6 +120,8 @@ export default async function AgendaPage({
           <ListaTurnos
             appointments={appointments}
             blocks={blocks}
+            libres={libres}
+            dia={date}
             timeZone={tz}
           />
         )}

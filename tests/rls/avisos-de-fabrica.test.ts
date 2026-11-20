@@ -62,22 +62,27 @@ describe("una cuenta recién creada", () => {
     expect(encendidas[0].offset_minutes).toBe(-1440);
   });
 
-  it("no manda de madrugada: la regla encendida tiene franja horaria", async () => {
+  // Since 2026-11-10 the factory rule has no window of its own: it follows
+  // the business's quiet hours, so changing them in settings is enough.
+  it("no manda de madrugada: la regla sigue la franja del negocio", async () => {
     const franja = await asAdmin(async (c) => {
       const { rows } = await c.query(
-        `select send_window_start, send_window_end
-         from public.reminder_rules
-         where tenant_id = $1 and enabled`,
+        `select r.send_window_start, r.send_window_end, ms.quiet_start, ms.quiet_end
+         from public.reminder_rules r
+         join public.messaging_settings ms on ms.tenant_id = r.tenant_id
+         where r.tenant_id = $1 and r.enabled`,
         [s.tenantA],
       );
       return rows[0] as {
         send_window_start: string | null;
         send_window_end: string | null;
+        quiet_start: string | null;
+        quiet_end: string | null;
       };
     });
 
-    expect(franja.send_window_start).not.toBeNull();
-    expect(franja.send_window_end).not.toBeNull();
+    expect(franja.send_window_start ?? franja.quiet_start).not.toBeNull();
+    expect(franja.send_window_end ?? franja.quiet_end).not.toBeNull();
   });
 
   it("cada regla nace con su plantilla de WhatsApp y con ninguna otra", async () => {

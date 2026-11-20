@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { createAppointment, type FormState } from "@/lib/actions/agenda";
+import { linkAgendar } from "@/lib/agendar";
 import type { ServiceWithCategory } from "@/lib/data/services";
 import { SelectorServicios } from "./selector-servicios";
 
@@ -26,12 +27,15 @@ export function FormTurno({
   clientName,
   services,
   date,
+  hora,
   deSiempre = [],
 }: {
   clientId: string;
   clientName: string;
   services: ServiceWithCategory[];
   date: string;
+  /** Time already chosen (a free gap, «el próximo turno»); 09:00 otherwise. */
+  hora?: string;
   /** Services of the client's last appointment, pre-selected. */
   deSiempre?: string[];
 }) {
@@ -46,7 +50,7 @@ export function FormTurno({
         <CardBody className="grid gap-2">
           <CardTitle>Para {clientName}</CardTitle>
           <Link
-            href="/agenda/nuevo"
+            href={linkAgendar({ dia: date, hora })}
             className="justify-self-start text-[13px] text-accent-text hover:underline"
           >
             Elegir otra persona
@@ -96,7 +100,7 @@ export function FormTurno({
                 type="time"
                 step={300}
                 required
-                defaultValue={sent?.time ?? "09:00"}
+                defaultValue={sent?.time ?? hora ?? "09:00"}
                 className="h-11 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px]"
               />
             </div>

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Buscador } from "@/app/(app)/clientes/_components/buscador";
 import { Card, CardBody, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { esDia, esHoraAgendable, linkAgendar } from "@/lib/agendar";
 import { getCurrentTenant } from "@/lib/auth/tenant";
 import { getLastServiceIds } from "@/lib/data/agenda";
 import { fullName, getClient, searchClients } from "@/lib/data/clients";
@@ -16,15 +17,17 @@ export const metadata: Metadata = { title: "Agendar turno" };
 export default async function NuevoTurnoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string; cliente?: string; q?: string }>;
+  searchParams: Promise<{ dia?: string; hora?: string; cliente?: string; q?: string }>;
 }) {
-  const { dia, cliente, q = "" } = await searchParams;
+  const { dia, hora: horaPedida, cliente, q = "" } = await searchParams;
 
   const membership = await getCurrentTenant();
   if (!membership) return null;
 
   const tz = membership.tenant.timezone;
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(dia ?? "") ? dia! : todayIn(tz);
+  const date = esDia(dia) ? dia : todayIn(tz);
+  // Chosen before getting here: a free gap in the agenda, «el próximo turno».
+  const hora = esHoraAgendable(horaPedida) ? horaPedida : undefined;
 
   // Paso 2: ya sabemos para quién es.
   if (cliente) {
@@ -65,6 +68,7 @@ export default async function NuevoTurnoPage({
                 clientName={fullName(client)}
                 services={activos}
                 date={date}
+                hora={hora}
                 deSiempre={deSiempre}
               />
             )}
@@ -93,7 +97,11 @@ export default async function NuevoTurnoPage({
           <Buscador initial={q} />
           <Button asChild variant="outline">
             <Link
-              href={`/clientes/nuevo?agendar=${date}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+              href={`/clientes/nuevo?${new URLSearchParams({
+                agendar: date,
+                ...(hora ? { hora } : {}),
+                ...(q ? { q } : {}),
+              })}`}
             >
               Nueva ficha
             </Link>
@@ -111,7 +119,7 @@ export default async function NuevoTurnoPage({
             {clients.slice(0, 12).map((c) => (
               <li key={c.id}>
                 <Link
-                  href={`/agenda/nuevo?dia=${date}&cliente=${c.id}`}
+                  href={linkAgendar({ dia: date, hora, cliente: c.id })}
                   className="flex items-center gap-3 rounded-card border-[1.5px] border-line bg-surface px-4 py-3 hover:border-accent"
                 >
                   <div className="min-w-0 flex-1">

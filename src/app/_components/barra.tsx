@@ -8,6 +8,7 @@ import { AvisoMensajes } from "./aviso-mensajes";
 import { META_VISIBLE } from "@/lib/canal-whatsapp";
 import { NavLink } from "./nav-link";
 import { GorroFiestas } from "./fiestas/gorro";
+import { Arbolito } from "./fiestas/arbolito";
 
 /**
  * Barra superior en píldora flotante. Los módulos se van sumando acá a medida
@@ -44,6 +45,10 @@ export async function Barra({ tenantName }: { tenantName: string }) {
           <span className="truncate text-[14.5px] font-semibold">
             {tenantName}
           </span>
+          {/* On narrow screens the tree lives here; on wide ones, in the margin. */}
+          {membership?.tenant.tema === "fiestas" && (
+            <Arbolito className="fiestas-arbol-barra" />
+          )}
         </Link>
 
         <nav

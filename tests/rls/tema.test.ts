@@ -35,6 +35,13 @@ describe("modo fiestas", () => {
     });
   });
 
+  it("the home page funnel is only for Dlay's panel", async () => {
+    await asUser(s.owner, async (c) => {
+      const code = await expectRejected(() => c.query(`select public.platform_embudo()`));
+      expect(code).toBe("42501");
+    });
+  });
+
   it("every account starts with the usual look and only accepts known ones", async () => {
     await asAdmin(async (c) => {
       const { rows } = await c.query(`select tema from public.tenants where id = $1`, [s.tenantA]);

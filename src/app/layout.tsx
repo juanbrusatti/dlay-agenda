@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Inter } from "next/font/google";
 import { ICONOS } from "@/lib/marca";
+import { publicEnv } from "@/lib/env";
 import "./globals.css";
 
 /**
@@ -32,7 +33,23 @@ const geist = Geist({
   preload: false,
 });
 
+// What a shared link says next to the picture (opengraph-image.tsx).
+const COMPARTIR = {
+  title: "Dlay Agenda · Recordatorios de turnos por WhatsApp",
+  description:
+    "Dlay le recuerda el turno a cada cliente o paciente por WhatsApp, recibe la respuesta y actualiza tu agenda sola. El primer mes es gratis.",
+};
+
 export const metadata: Metadata = {
+  // Shared-link cards need absolute addresses.
+  metadataBase: new URL(publicEnv.NEXT_PUBLIC_SITE_URL),
+  openGraph: {
+    ...COMPARTIR,
+    siteName: "Dlay Agenda",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", ...COMPARTIR },
   title: {
     default: "Dlay Agenda",
     template: "%s · Dlay",

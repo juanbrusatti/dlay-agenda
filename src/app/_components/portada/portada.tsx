@@ -14,6 +14,12 @@ import type { Rubro } from "@/lib/rubros";
 import { EJEMPLOS_PORTADA } from "./ejemplos";
 import { ElegirEjemplo } from "./elegir-ejemplo";
 import { ContarVisita } from "./contar-visita";
+import { EnlaceContado } from "./boton-contado";
+import { Calculadora } from "./calculadora";
+import { CasoReal, TITULO_CASO } from "./caso-real";
+import { Preguntas } from "./preguntas";
+import { WhatsappFlotante } from "./whatsapp-flotante";
+import { WHATSAPP_CONSULTA } from "@/lib/contacto";
 
 /** Cards about what a rubro cares about, shown when its example is chosen. */
 type Pensado = { titulo: string; bajada: string; puntos: [string, string][] };
@@ -99,6 +105,7 @@ export function Portada({
   return (
     <div className="min-h-dvh">
       <ContarVisita ruta={ruta} />
+      <WhatsappFlotante />
       <header className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
         <Imagotipo className="text-[26px]" />
         <Button asChild variant="outline" size="sm">
@@ -123,10 +130,19 @@ export function Portada({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button asChild size="lg">
-              <Link href="/entrar?crear">Crear mi cuenta</Link>
-            </Button>
+          <div className="grid gap-2.5">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button asChild size="lg">
+                <EnlaceContado boton="crear_cuenta" href="/entrar?crear">
+                  Crear mi cuenta
+                </EnlaceContado>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <EnlaceContado boton="whatsapp" href={WHATSAPP_CONSULTA} externo>
+                  Escribinos por WhatsApp
+                </EnlaceContado>
+              </Button>
+            </div>
             <span className="text-[13.5px] text-faint">
               El primer mes es gratis. No pedimos tarjeta.
             </span>
@@ -167,6 +183,11 @@ export function Portada({
             </div>
           </Seccion>
         )}
+
+        {/* ── Un caso real ──────────────────────────────────────────── */}
+        <Seccion titulo={TITULO_CASO}>
+          <CasoReal />
+        </Seccion>
 
         {/* ── El precio ──────────────────────────────────────────────── */}
         <Seccion
@@ -248,6 +269,31 @@ export function Portada({
         </Seccion>
         )}
 
+        {/* ── Cuentas ────────────────────────────────────────────────── */}
+        <Seccion
+          titulo="¿Cuánto te cuesta un turno perdido?"
+          bajada="Hacé la cuenta con tus números."
+        >
+          <Calculadora abonoCents={ABONO_MENSUAL_CENTS} />
+        </Seccion>
+
+        {/* ── Preguntas ──────────────────────────────────────────────── */}
+        <Seccion titulo="Lo que nos preguntan antes de empezar.">
+          <Preguntas />
+          <p className="text-[14px] text-muted">
+            ¿Te quedó otra duda?{" "}
+            <EnlaceContado
+              boton="whatsapp"
+              href={WHATSAPP_CONSULTA}
+              externo
+              className="font-medium text-accent-text underline-offset-2 hover:underline"
+            >
+              Escribinos por WhatsApp
+            </EnlaceContado>{" "}
+            y te contestamos nosotros, no un robot.
+          </p>
+        </Seccion>
+
         {/* ── El cierre ──────────────────────────────────────────────── */}
         <section className="grid gap-5 rounded-card border-[1.5px] border-accent bg-accent p-7 text-on-accent sm:p-10">
           <p className="font-hand text-[40px] leading-none sm:text-[52px]">
@@ -265,7 +311,9 @@ export function Portada({
               size="lg"
               className="bg-surface text-ink hover:opacity-90"
             >
-              <Link href="/entrar?crear">Empezar ahora</Link>
+              <EnlaceContado boton="crear_cuenta" href="/entrar?crear">
+                Empezar ahora
+              </EnlaceContado>
             </Button>
           </div>
         </section>

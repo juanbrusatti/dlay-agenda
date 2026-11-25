@@ -385,6 +385,8 @@ describe("qué puede ejecutar un visitante sin sesión", () => {
     "booking_reschedule",
     "booking_slots",
     "booking_subscribe_push",
+    // Counts taps on the home page buttons; only adds one to a daily total.
+    "registrar_clic",
     // Counts visits to the public home pages; only adds one to a daily total.
     "registrar_visita",
   ];

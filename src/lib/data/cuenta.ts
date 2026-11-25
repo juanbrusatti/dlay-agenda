@@ -90,3 +90,21 @@ export async function getTemas(): Promise<TemaCuenta[] | null> {
   if (error) return null;
   return (data as unknown as TemaCuenta[]) ?? [];
 }
+
+export type Embudo = {
+  /** 7 or 30: the window these totals cover, ending today. */
+  dias: number;
+  visitas: number;
+  crear_cuenta: number;
+  whatsapp: number;
+  registros: number;
+  negocios: number;
+};
+
+/** Home page funnel for the panel. Null if it can't read it. */
+export async function getEmbudo(): Promise<Embudo[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("platform_embudo");
+  if (error) return null;
+  return (data as unknown as Embudo[]) ?? [];
+}

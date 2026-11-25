@@ -2507,6 +2507,8 @@ export type Database = {
       }
       platform_visitas: { Args: never; Returns: Json }
       registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
+      registrar_clic: { Args: { p_boton: string }; Returns: undefined }
+      platform_embudo: { Args: never; Returns: Json }
       platform_temas: { Args: never; Returns: Json }
       platform_set_tema: {
         Args: { p_tenant: string; p_tema: string | null }

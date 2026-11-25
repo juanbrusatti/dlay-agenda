@@ -25,6 +25,8 @@ const PUBLIC_PREFIXES = [
   "/legal",
   // The home page for each rubro with its own page.
   "/psicologos",
+  // The picture shared links show; WhatsApp fetches it without a session.
+  "/opengraph-image",
 ];
 
 function isPublic(pathname: string) {

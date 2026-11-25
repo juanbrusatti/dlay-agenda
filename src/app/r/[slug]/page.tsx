@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
+import { LogoNegocio } from "@/components/brand/logo-negocio";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
-import { getBookingPage } from "@/lib/data/reserva";
+import { getBookingPage, getLogoPublico } from "@/lib/data/reserva";
 import { Reservar } from "./_components/reservar";
 
 export async function generateMetadata({
@@ -34,7 +35,7 @@ export default async function ReservarPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = await getBookingPage(slug);
+  const [page, logo] = await Promise.all([getBookingPage(slug), getLogoPublico(slug)]);
 
   // Misma respuesta si el negocio no existe o si todavía no abrió su agenda:
   // decir cuál de las dos es filtra información que no hace falta dar.
@@ -45,6 +46,7 @@ export default async function ReservarPage({
       <RegisterServiceWorker />
 
       <header className="grid gap-3">
+        {logo && <LogoNegocio url={logo} nombre={page.tenant.name} lado={56} />}
         <h1 className="text-[30px] font-bold leading-tight tracking-[-0.035em]">
           Reservá tu turno en{" "}
           <span className="font-hand text-[40px] leading-none text-accent-text">

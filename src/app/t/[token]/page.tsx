@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/brand/logo";
+import { LogoNegocio } from "@/components/brand/logo-negocio";
+import { getLogoPublico } from "@/lib/data/reserva";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { Card, CardBody } from "@/components/ui/card";
 import { getManageView } from "@/lib/data/autogestion";
@@ -57,6 +59,8 @@ export default async function TurnoPublicoPage({
 
   const { tenant, appointment } = vista;
   const tz = tenant.timezone;
+  // The business's own logo where Dlay's turtle goes, same size: nothing moves.
+  const logo = await getLogoPublico(tenant.slug);
 
   const dia = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
@@ -73,7 +77,11 @@ export default async function TurnoPublicoPage({
       <RegisterServiceWorker />
 
       <header className="grid gap-3">
-        <Logo className="h-10 w-10" />
+        {logo ? (
+          <LogoNegocio url={logo} nombre={tenant.name} lado={44} />
+        ) : (
+          <Logo className="h-10 w-10" />
+        )}
         <p className="text-[14.5px] text-muted">
           {appointment.firstName ? `Hola ${appointment.firstName}, este es` : "Este es"}{" "}
           tu turno en{" "}

@@ -4,6 +4,8 @@ import { atLeast, getCurrentTenant } from "@/lib/auth/tenant";
 import { getBranch, getTenant } from "@/lib/data/configuracion";
 import { Volver } from "../_components/volver";
 import { FormEstetica } from "./form";
+import { SubirLogo } from "./subir-logo";
+import { urlDelLogo } from "@/lib/logo";
 
 export const metadata: Metadata = { title: "Tu negocio" };
 
@@ -24,6 +26,7 @@ export default async function EsteticaPage() {
             Tu negocio
           </h1>
         </div>
+        <SubirLogo tenantId={tenant.id} logoUrl={urlDelLogo(tenant.logo_path)} />
         <FormEstetica tenant={tenant} branch={branch} />
       </main>
     </>

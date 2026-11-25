@@ -2033,6 +2033,7 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          logo_path: string | null
           locale: string
           name: string
           rubro: string
@@ -2046,6 +2047,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          logo_path?: string | null
           locale?: string
           name: string
           rubro?: string
@@ -2059,6 +2061,7 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          logo_path?: string | null
           locale?: string
           name?: string
           rubro?: string
@@ -2507,6 +2510,7 @@ export type Database = {
       }
       platform_visitas: { Args: never; Returns: Json }
       registrar_visita: { Args: { p_ruta: string }; Returns: undefined }
+      logo_negocio: { Args: { p_slug: string }; Returns: string | null }
       registrar_clic: { Args: { p_boton: string }; Returns: undefined }
       platform_embudo: { Args: never; Returns: Json }
       platform_temas: { Args: never; Returns: Json }

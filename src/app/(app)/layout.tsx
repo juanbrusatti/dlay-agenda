@@ -11,6 +11,7 @@ import { AvisoWhatsappCaido } from "@/app/_components/aviso-whatsapp-caido";
 import { RubroProvider } from "@/components/rubro/contexto";
 import { Novedades } from "@/app/_components/novedades";
 import { getNovedadesPendientes } from "@/lib/data/novedades";
+import { NOVEDADES } from "@/lib/novedades";
 import { ColoresFiestas } from "@/app/_components/fiestas/colores";
 import { DecoracionFiestas } from "@/app/_components/fiestas/decoracion";
 
@@ -41,7 +42,12 @@ export default async function AppLayout({
   const guiaPendiente = membership ? !(await getGuiaVista()) : false;
   const whatsappCaido = membership ? await getWhatsappCaido(membership.tenant.id) : false;
   // Never on top of the welcome tour: that one goes first.
-  const novedades = membership && !guiaPendiente ? await getNovedadesPendientes() : false;
+  const novedades =
+    membership &&
+    !guiaPendiente &&
+    (!NOVEDADES.soloAdmin || atLeast(membership.role, "admin"))
+      ? await getNovedadesPendientes()
+      : false;
 
   return (
     <RubroProvider rubro={membership?.tenant.rubro ?? "estetica"}>

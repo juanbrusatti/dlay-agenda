@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,21 @@ export function Novedades() {
             </li>
           ))}
         </ul>
-        <div className="flex justify-end">
-          <Button onClick={cerrar}>Entendido</Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          {NOVEDADES.accion ? (
+            <>
+              <Button variant="ghost" onClick={cerrar}>
+                Entendido
+              </Button>
+              <Button asChild>
+                <Link href={NOVEDADES.accion.href} onClick={cerrar}>
+                  {NOVEDADES.accion.texto}
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <Button onClick={cerrar}>Entendido</Button>
+          )}
         </div>
       </div>
     </div>,

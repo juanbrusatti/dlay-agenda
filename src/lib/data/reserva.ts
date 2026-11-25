@@ -1,5 +1,6 @@
 import "server-only";
 
+import { urlDelLogo } from "@/lib/logo";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -52,4 +53,16 @@ export async function getPublicLink(): Promise<PublicLink | null> {
 
   if (!tenant) return null;
   return { slug: tenant.slug, enabled: settings?.enabled ?? false };
+}
+
+/**
+ * The logo of the business behind a public address, for the booking page and
+ * the page behind a reminder's link. Null when it has none or on any error:
+ * the page then looks as it always did.
+ */
+export async function getLogoPublico(slug: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("logo_negocio", { p_slug: slug });
+  if (error) return null;
+  return urlDelLogo(data);
 }

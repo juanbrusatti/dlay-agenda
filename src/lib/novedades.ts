@@ -5,35 +5,31 @@
  * People who closed the previous one see this one once; accounts created
  * after `desde` never see it, since everything is new to them anyway.
  */
-export const NOVEDADES = {
-  clave: "2026-11-menos-pasos",
-  desde: "2026-11-20T15:00:00Z",
-  titulo: "Novedades para ahorrarte pasos",
+export const NOVEDADES: {
+  clave: string;
+  desde: string;
+  titulo: string;
+  items: ReadonlyArray<{ titulo: string; texto: string }>;
+  /** A button next to «Entendido» that takes you to try it. */
+  accion?: { texto: string; href: string };
+  /** Only for owners and admins, when it is about something only they can change. */
+  soloAdmin?: boolean;
+} = {
+  clave: "2026-11-logo",
+  desde: "2026-11-26T12:00:00Z",
+  titulo: "Ahora podés poner tu logo",
   items: [
     {
-      titulo: "El próximo turno, en un toque",
+      titulo: "Tu logo, donde lo ven tus clientes",
       texto:
-        "Cuando marcás «Vino y se atendió», te sugiere el próximo turno según cada cuánto viene esa persona. Lo tocás y queda listo para guardar.",
+        "Aparece chiquito arriba de la página donde tus clientes confirman o cancelan el turno, y en tu página de reservas. Así reconocen enseguida que el mensaje es tuyo.",
     },
     {
-      titulo: "Agendar en un hueco libre",
+      titulo: "Cómo ponerlo",
       texto:
-        "En la agenda aparecen los ratos libres del día. Tocá «Agendar acá» y el turno se abre con ese día y esa hora.",
-    },
-    {
-      titulo: "Abrir la caja sin salir del cobro",
-      texto:
-        "Si vas a cobrar en efectivo con la caja cerrada, la abrís ahí mismo, sin perder lo que estabas haciendo.",
-    },
-    {
-      titulo: "Turnos sin cerrar, a la vista",
-      texto:
-        "Si quedó algún día sin marcar quién vino, te avisa en Inicio. Tocás el día y lo cerrás todo junto.",
-    },
-    {
-      titulo: "Clientes para recuperar",
-      texto:
-        "En Clientes, «Para recuperar» te muestra a quienes hace tiempo que no vienen. «Escribirle» abre WhatsApp con un mensaje listo.",
+        "Entrá a Ajustes → Tu negocio → Logo o foto y tocá «Subir imagen». Sirve una foto del celular: la achicamos sola. Se ve mejor si es cuadrada.",
     },
   ],
-} as const;
+  accion: { texto: "Subir mi logo", href: "/configuracion/negocio" },
+  soloAdmin: true,
+};

@@ -9,6 +9,7 @@ import {
   type FormState,
 } from "@/lib/actions/agenda";
 import type { AppointmentStatus } from "@/lib/data/agenda";
+import { ElegirHorario } from "./horarios-libres";
 
 /**
  * Las acciones que se usan todos los días, en un toque.
@@ -38,6 +39,7 @@ export function AccionesEstado({
   status,
   fecha,
   hora,
+  minutos,
 }: {
   id: string;
   status: AppointmentStatus;
@@ -45,11 +47,15 @@ export function AccionesEstado({
   fecha: string;
   /** La hora que tiene hoy: `14:30`. */
   hora: string;
+  /** How long it keeps the agenda busy, cleanup included. */
+  minutos: number;
 }) {
   const [pending, startTransition] = useTransition();
   const [cancelando, setCancelando] = useState(false);
   const [moviendo, setMoviendo] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const [nuevoDia, setNuevoDia] = useState(fecha);
+  const [nuevaHora, setNuevaHora] = useState(hora);
 
   const [estadoMover, accionMover] = useActionState(
     rescheduleAppointment.bind(null, id),
@@ -110,7 +116,8 @@ export function AccionesEstado({
               name="date"
               type="date"
               required
-              defaultValue={fecha}
+              value={nuevoDia}
+              onChange={(e) => setNuevoDia(e.target.value)}
               className="h-11 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px]"
             />
           </div>
@@ -128,11 +135,20 @@ export function AccionesEstado({
               // salto de cinco el navegador rechaza su propia hora de origen.
               step={60}
               required
-              defaultValue={hora}
+              value={nuevaHora}
+              onChange={(e) => setNuevaHora(e.target.value)}
               className="h-11 rounded-[14px] border-[1.5px] border-line bg-surface px-3.5 text-[15px]"
             />
           </div>
         </div>
+
+        <ElegirHorario
+          fecha={nuevoDia}
+          minutos={minutos}
+          excluir={id}
+          elegida={nuevaHora}
+          onElegir={setNuevaHora}
+        />
 
         <p className="text-[12.5px] leading-snug text-muted">
           Conserva los servicios y la duración. Si el horario nuevo ya está

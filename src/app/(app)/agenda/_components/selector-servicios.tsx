@@ -9,12 +9,28 @@ import type { ServiceWithCategory } from "@/lib/data/services";
  * elige: saber que el turno va a durar una hora y media importa ANTES de
  * elegir el horario, no después.
  */
+/**
+ * How long the chosen services keep the agenda busy: their times added up,
+ * plus the longest cleanup. The same sum the database makes when booking.
+ */
+export function minutosOcupados(services: ServiceWithCategory[], ids: string[]): number {
+  const elegidos = services.filter((s) => ids.includes(s.id));
+  if (elegidos.length === 0) return 0;
+  return (
+    elegidos.reduce((sum, s) => sum + s.duration_minutes, 0) +
+    Math.max(...elegidos.map((s) => s.buffer_minutes))
+  );
+}
+
 export function SelectorServicios({
   services,
   defaultSelected = [],
+  onCambio,
 }: {
   services: ServiceWithCategory[];
   defaultSelected?: string[];
+  /** Told the new selection each time it changes. */
+  onCambio?: (ids: string[]) => void;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultSelected);
 
@@ -30,9 +46,11 @@ export function SelectorServicios({
   const aConvenir = elegidos.some((s) => s.price_cents === null);
 
   function alternar(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    const nuevos = selected.includes(id)
+      ? selected.filter((x) => x !== id)
+      : [...selected, id];
+    setSelected(nuevos);
+    onCambio?.(nuevos);
   }
 
   return (

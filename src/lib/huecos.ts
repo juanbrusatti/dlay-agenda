@@ -90,3 +90,20 @@ export function minutoDelDia(instante: string | Date, dia: string, timeZone: str
   if (suDia > dia) return 24 * 60;
   return aMinutos(timeIn(fecha, timeZone));
 }
+
+/**
+ * Start times to offer inside free gaps for something that takes `minutos`:
+ * each gap's own start, then every `paso` minutes on the clock (10:00, 10:30…),
+ * as long as it still fits before the gap ends.
+ */
+export function horasDeInicio(libres: Tramo[], minutos: number, paso = 30): string[] {
+  const horas = new Set<number>();
+  for (const tramo of libres) {
+    if (tramo.hasta - tramo.desde < minutos) continue;
+    horas.add(tramo.desde);
+    for (let t = Math.ceil((tramo.desde + 1) / paso) * paso; t + minutos <= tramo.hasta; t += paso) {
+      horas.add(t);
+    }
+  }
+  return [...horas].sort((a, b) => a - b).map(aHora);
+}

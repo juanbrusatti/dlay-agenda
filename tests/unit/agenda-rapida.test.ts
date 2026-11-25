@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { esHoraAgendable, linkAgendar } from "@/lib/agendar";
-import { aHora, aMinutos, huecosLibres, minutoDelDia } from "@/lib/huecos";
+import { aHora, aMinutos, horasDeInicio, huecosLibres, minutoDelDia } from "@/lib/huecos";
 import { diaSugerido, semanasSugeridas } from "@/lib/proximo";
 import { mensajeRecuperar, plazoDe } from "@/lib/recuperar";
 
@@ -101,5 +101,18 @@ describe("para recuperar", () => {
     expect(m).not.toContain("Paula");
     expect(m).not.toMatch(/terapia|sesión|psic/i);
     expect(mensajeRecuperar("estetica", "Sofía", "Estudio Malva")).toContain("Estudio Malva");
+  });
+});
+
+describe("horasDeInicio", () => {
+  const h2 = (desde: string, hasta: string) => ({ desde: aMinutos(desde), hasta: aMinutos(hasta) });
+
+  it("offers each gap's start and then every half hour that still fits", () => {
+    expect(horasDeInicio([h2("09:00", "11:00")], 60)).toEqual(["09:00", "09:30", "10:00"]);
+    expect(horasDeInicio([h2("10:10", "12:00")], 60)).toEqual(["10:10", "10:30", "11:00"]);
+  });
+
+  it("skips gaps too short for the booking", () => {
+    expect(horasDeInicio([h2("09:00", "09:40"), h2("14:00", "15:00")], 60)).toEqual(["14:00"]);
   });
 });

@@ -164,6 +164,11 @@ export default async function TurnoPage({
               status={appointment.status}
               fecha={dia}
               hora={timeIn(appointment.starts_at, tz)}
+              minutos={Math.round(
+                (new Date(appointment.blocks_until).getTime() -
+                  new Date(appointment.starts_at).getTime()) /
+                  60_000,
+              )}
             />
           </CardBody>
         </Card>

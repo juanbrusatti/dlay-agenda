@@ -111,14 +111,52 @@ const PSICOLOGIA: EjemploPortada = {
   quienSos: "Sos el paciente",
 };
 
+// Any other business with appointments, told as a physiotherapy practice:
+// the most common kind of consultorio after psychology. Its reminder is the
+// factory one every non-psychology account gets.
+const GENERAL: EjemploPortada = {
+  negocio: "Kine Norte",
+  slug: "kine-norte",
+  inicial: "K",
+  turnos: [
+    { id: "mica", hora: "10:00", fin: "10:45", nombre: "Mica Sosa", servicio: "Sesión de kinesiología", precio: "$ 16.000" },
+    { id: "carla", hora: "14:00", fin: "14:45", nombre: "Carla Benítez", servicio: "Rehabilitación de rodilla", precio: "$ 16.000" },
+    { id: "sofia", hora: "15:00", fin: "16:00", nombre: "Sofía Ramírez", servicio: "Evaluación inicial", precio: "$ 20.000", alerta: true },
+    { id: "lu", hora: "16:00", fin: "17:00", nombre: "Lu Ferreyra", servicio: "Drenaje linfático", precio: "$ 18.000" },
+  ],
+  reservables: ["Evaluación inicial · 60 min", "Sesión de kinesiología · 45 min"],
+  recordatorio:
+    "Hola Sofía! Te escribimos de Kine Norte para recordarte tu turno de mañana {cuando}, para evaluación inicial.",
+  indicacion: "Traé los estudios que tengas y vení con ropa cómoda.",
+  enlace: "Para confirmar el turno o avisarnos que no vas a venir:",
+  despedida: "¡Te esperamos!",
+  ficha: {
+    alerta: "Operada de rodilla en marzo.",
+    etiquetas: ["Rodilla", "Semanal"],
+    seguimiento: "Buena movilidad. Próxima: sumar ejercicios de fuerza.",
+    ultimaVez: "1 sem.",
+    gastoCents: 14400000,
+    relato:
+      "Antes de que llegue, abrís su ficha: lo que hay que tener en cuenta, cuántas veces vino y lo que anotaste la última vez.",
+  },
+  cobroCents: 2000000,
+  quienSos: "Sos el paciente",
+};
+
 /** The reminder Sofía gets, for a given «jueves 12 a las 15:00». */
 export function recordatorioDe(e: EjemploPortada, cuando: string): string {
   return e.recordatorio.replace("{cuando}", cuando);
 }
 
-export const EJEMPLOS_PORTADA: Partial<Record<Rubro, EjemploPortada>> & {
-  estetica: EjemploPortada;
-} = {
+export const EJEMPLOS_PORTADA: Record<Rubro, EjemploPortada> = {
   estetica: ESTETICA,
   psicologia: PSICOLOGIA,
+  general: GENERAL,
+};
+
+/** How each example is offered in the home page's picker. */
+export const NOMBRE_EJEMPLO: Record<Rubro, string> = {
+  estetica: "Estética",
+  psicologia: "Psicología",
+  general: "Kinesiología y otros",
 };

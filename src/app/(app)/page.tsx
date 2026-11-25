@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CartelCuenta } from "@/app/_components/cartel-cuenta";
 import { Portada } from "@/app/_components/portada/portada";
+import { rubroDe } from "@/lib/rubros";
 import { CrearNegocio } from "@/app/_components/crear-negocio";
 import { TenelaAMano } from "@/components/pwa/tenela-a-mano";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
@@ -22,7 +23,11 @@ const ROLES: Record<string, string> = {
   staff: "Profesional",
 };
 
-export default async function InicioPage() {
+export default async function InicioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ para?: string }>;
+}) {
   // El middleware ya garantiza que hay sesión; esto es sólo para el saludo.
   const [user, membership, link, cartel] = await Promise.all([
     getCurrentUser(),
@@ -33,7 +38,11 @@ export default async function InicioPage() {
 
   // Sin sesión, esta dirección es la portada: la única pantalla pensada para
   // alguien que todavía no sabe qué es Dlay.
-  if (!user) return <Portada />;
+  if (!user) {
+    // `?para=` picks the example the home page demos show.
+    const { para } = await searchParams;
+    return <Portada rubro={rubroDe(para)} />;
+  }
 
   if (!membership) {
     return (

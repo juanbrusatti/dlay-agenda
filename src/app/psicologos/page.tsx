@@ -7,7 +7,11 @@ export const metadata: Metadata = {
     "Agenda y recordatorios por WhatsApp para tu consultorio. Mensajes discretos, menos sesiones perdidas.",
 };
 
-/** The home page told for a psychology practice. Public, like the home page. */
+/**
+ * The same home page, opened with the psychology example. The address stays
+ * because it was already sent to practices, and the panel counts its visits
+ * apart.
+ */
 export default function PsicologosPage() {
-  return <Portada rubro="psicologia" />;
+  return <Portada rubro="psicologia" ruta="/psicologos" />;
 }
